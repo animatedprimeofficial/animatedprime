@@ -125,7 +125,7 @@ export default function ExperienceSection() {
           <div>
             <Reveal className="flex items-center gap-3" y={14}>
               <span className="h-px w-10 bg-gradient-to-r from-violet to-cyan" aria-hidden="true" />
-              <span className="eyebrow text-fog-500">Chapter 05 — Why AnimatedPrime</span>
+              <span className="eyebrow text-fog-500">Chapter 06 — Why AnimatedPrime</span>
             </Reveal>
             <AnimatedHeading
               as="h2"

@@ -253,6 +253,7 @@ export function mapTmdbMovie(result: TmdbResult): Movie | null {
     quality: qualityFor(rating, result.vote_count),
     studio: result.production_companies?.[0]?.name,
     language,
+    anime: result.original_language === "ja",
     source: "tmdb",
   };
 }
@@ -319,7 +320,7 @@ export async function loadTmdbCatalog(): Promise<TmdbCatalog | null> {
   const today = new Date().toISOString().slice(0, 10);
   const sixMonthsAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 183).toISOString().slice(0, 10);
 
-  const [popular, recent, topRated, anime] = await Promise.all([
+  const [popular, recent, topRated, animePopular, animeTop] = await Promise.all([
     discover("popularity.desc"),
     discover("primary_release_date.desc", {
       "primary_release_date.gte": sixMonthsAgo,
@@ -327,10 +328,17 @@ export async function loadTmdbCatalog(): Promise<TmdbCatalog | null> {
       "vote_count.gte": 40,
     }),
     discover("vote_average.desc", { "vote_count.gte": 900 }),
+    // Japanese animation is queried on its own terms — once for what is being
+    // watched now, once for what is actually good — so the anime shelf is not
+    // just whatever the general animation charts happen to surface.
     discover("popularity.desc", { with_original_language: "ja" }),
+    discover("vote_average.desc", {
+      with_original_language: "ja",
+      "vote_count.gte": 400,
+    }),
   ]);
 
-  const pool = dedupe([...popular, ...recent, ...topRated, ...anime]).filter(
+  const pool = dedupe([...popular, ...recent, ...topRated, ...animePopular, ...animeTop]).filter(
     (movie) => movie.rating > 0 && movie.year > 1970,
   );
   if (pool.length < 8) return null;

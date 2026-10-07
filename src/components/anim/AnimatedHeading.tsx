@@ -74,47 +74,38 @@ export default function AnimatedHeading({
       const words = root.querySelectorAll<HTMLElement>("[data-word]");
       if (!words.length) return;
 
-      const animateIn = () =>
-        gsap.fromTo(
-          words,
-          { yPercent, opacity: 0, rotate: 2.5, filter: "blur(8px)" },
-          {
-            yPercent: 0,
-            opacity: 1,
-            rotate: 0,
-            filter: "blur(0px)",
-            duration: 1.15,
-            ease: EASE.cinema,
-            stagger,
-            delay,
-            clearProps: "filter,transform",
-          },
-        );
+      const from = { yPercent, opacity: 0, rotate: 2.5, filter: "blur(8px)" };
+      const to = {
+        yPercent: 0,
+        opacity: 1,
+        rotate: 0,
+        filter: "blur(0px)",
+        duration: 1.15,
+        ease: EASE.cinema,
+        stagger,
+        delay,
+        clearProps: "filter,transform",
+      };
+
+      const animateIn = () => gsap.fromTo(words, from, to);
 
       if (mode === "immediate") {
         animateIn();
         return;
       }
       if (mode === "active") {
+        // While `active` is false the heading is waiting behind the intro
+        // curtain. Holding the opening pose here is what stops it from being
+        // revealed fully worded during the curtain's one-second lift and only
+        // then snapping back to animate in.
         if (active) animateIn();
+        else gsap.set(words, from);
         return;
       }
-      gsap.fromTo(
-        words,
-        { yPercent, opacity: 0, rotate: 2.5, filter: "blur(8px)" },
-        {
-          yPercent: 0,
-          opacity: 1,
-          rotate: 0,
-          filter: "blur(0px)",
-          duration: 1.15,
-          ease: EASE.cinema,
-          stagger,
-          delay,
-          clearProps: "filter,transform",
-          scrollTrigger: { trigger: root, start, once: true },
-        },
-      );
+      gsap.fromTo(words, from, {
+        ...to,
+        scrollTrigger: { trigger: root, start, once: true },
+      });
     },
     { scope: rootRef, dependencies: [ready, mode, active, reducedMotion, text], revertOnUpdate: true },
   );

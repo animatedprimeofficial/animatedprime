@@ -404,6 +404,7 @@ export default function ApkDownloadDialog({
                 onClick={startDownload}
                 disabled={busy}
                 data-cursor="play"
+                title={release.fileName}
                 className={cn(
                   "inline-flex flex-1 items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-violet via-[#8f6bff] to-cyan px-7 py-4 text-sm font-bold text-ink-950 transition-all duration-400",
                   busy ? "cursor-wait opacity-80" : "hover:shadow-[0_22px_70px_-14px_rgba(70,229,255,0.65)]",
@@ -419,18 +420,6 @@ export default function ApkDownloadDialog({
                   </svg>
                 )}
                 {primaryLabel}
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setPhase("notify");
-                  setNotifyError(null);
-                }}
-                data-cursor="link"
-                className="rounded-full border border-white/12 px-6 py-4 text-sm font-semibold text-fog-300 transition-colors hover:border-white/30 hover:text-fog-100"
-              >
-                Email me a link
               </button>
             </div>
           </div>

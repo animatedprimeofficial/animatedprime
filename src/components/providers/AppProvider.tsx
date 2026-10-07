@@ -204,7 +204,7 @@ export function AppProvider({
 
       <SectionRail />
       <CustomCursor />
-      <PlayerOverlay />
+      <PlayerOverlay release={release} />
       <IntroCurtain stage={stage} onDone={completeIntro} reducedMotion={reducedMotion} />
     </AppContext.Provider>
   );

@@ -11,6 +11,7 @@ import Reveal from "@/components/anim/Reveal";
 const NAV = [
   { label: "Home", href: "#top" },
   { label: "Movies", href: "#featured" },
+  { label: "Anime", href: "#anime" },
   { label: "Genres", href: "#genres" },
   { label: "The app", href: "#app" },
   { label: "About", href: "#experience" },
@@ -85,8 +86,8 @@ export default function Footer() {
           <Reveal y={22} className="flex flex-col gap-5">
             <Logo />
             <p className="max-w-xs text-sm leading-relaxed text-fog-500">
-              A premium home for animated movies. Curated worlds, honest recommendations
-              and playback that never gets in the way of the story.
+              A premium home for animated films and anime. Curated worlds, honest
+              recommendations and playback that never gets in the way of the story.
             </p>
             <p className="story-italic text-lg text-fog-300">Animation. Reimagined.</p>
           </Reveal>

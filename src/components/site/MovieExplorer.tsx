@@ -99,7 +99,7 @@ export default function MovieExplorer() {
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">
         <SectionHeader
-          eyebrow="Chapter 07 — Discovery"
+          eyebrow="Chapter 08 — Discovery"
           title="Find Your *Next World*"
           description="Search the library, filter by mood, or let us choose. Every result plays in the quality your screen deserves."
           aside={

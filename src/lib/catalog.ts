@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import {
   LOCAL_MOVIES,
+  pickAnime,
   pickHero,
   pickRails,
   type Movie,
@@ -13,6 +14,8 @@ export interface Catalog {
   hero: Movie;
   featured: Movie[];
   trending: Movie[];
+  /** the anime shelf, so the library reads as films *and* anime */
+  anime: Movie[];
   source: "tmdb" | "local";
   /** shown in the footer when live metadata is in use */
   attribution?: string;
@@ -25,6 +28,7 @@ function localCatalog(): Catalog {
     hero: pickHero(LOCAL_MOVIES),
     featured,
     trending,
+    anime: pickAnime(LOCAL_MOVIES),
     source: "local",
   };
 }
@@ -43,6 +47,7 @@ export const getCatalog = cache(async (): Promise<Catalog> => {
     if (live && live.movies.length >= 8) {
       return {
         ...live,
+        anime: pickAnime(live.movies),
         source: "tmdb",
         attribution: TMDB_ATTRIBUTION,
       };

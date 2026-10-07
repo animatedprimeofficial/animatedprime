@@ -113,7 +113,7 @@ export default function ImmersiveScene() {
         <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">
           <Reveal className="flex items-center gap-3" y={14}>
             <span className="h-px w-10 bg-gradient-to-r from-violet to-cyan" aria-hidden="true" />
-            <span className="eyebrow text-fog-500">Chapter 04 — The world</span>
+            <span className="eyebrow text-fog-500">Chapter 05 — The world</span>
           </Reveal>
           <AnimatedHeading
             as="h2"
@@ -190,7 +190,7 @@ export default function ImmersiveScene() {
         >
           <div className="flex items-center gap-3">
             <span className="h-px w-10 bg-gradient-to-r from-violet to-cyan" aria-hidden="true" />
-            <span className="eyebrow text-fog-500">Chapter 04 — The world</span>
+            <span className="eyebrow text-fog-500">Chapter 05 — The world</span>
           </div>
           <h2 className="display-lg mt-5 max-w-3xl text-fog-100">
             Step inside <span className="story-italic">an animated world</span>

@@ -77,7 +77,7 @@ export default async function MobileAppSection() {
           <div className="max-w-3xl">
             <Reveal className="flex items-center gap-3" y={14} duration={0.8}>
               <span className="h-px w-10 bg-gradient-to-r from-violet to-cyan" aria-hidden="true" />
-              <span className="eyebrow text-fog-500">Chapter 06 — In your pocket</span>
+              <span className="eyebrow text-fog-500">Chapter 07 — In your pocket</span>
             </Reveal>
             <AnimatedHeading
               as="h2"

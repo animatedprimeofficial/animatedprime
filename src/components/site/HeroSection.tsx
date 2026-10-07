@@ -25,6 +25,32 @@ function PlayGlyph({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Where every animated hero element sits before the entrance plays.
+ *
+ * Declared once so the pre-stage and the timeline cannot drift apart. Staging
+ * these the moment the client hydrates is what lets the entrance begin the
+ * instant the curtain lifts — without it the browser paints the finished hero
+ * for a frame, then snaps everything back to the start of the animation.
+ *
+ * The backdrop is deliberately absent: it stays lit behind the curtain so the
+ * reveal opens onto an already-lit room rather than a black frame.
+ */
+const HERO_OPENING = {
+  "[data-hero-atmos]": { opacity: 0 },
+  "[data-hero-pill]": { y: 18, opacity: 0 },
+  "[data-hero-frame]": {
+    clipPath: "inset(16% 14% 16% 14% round 2.6rem)",
+    scale: 1.09,
+    opacity: 0,
+  },
+  "[data-hero-sub]": { y: 24, opacity: 0 },
+  "[data-hero-feature]": { y: 36, opacity: 0 },
+  "[data-hero-chip]": { y: 28, opacity: 0, scale: 0.94 },
+  "[data-hero-cta]": { y: 22, opacity: 0 },
+  "[data-hero-cue]": { opacity: 0, y: 14 },
+} as const;
+
 export default function HeroSection() {
   const rootRef = useRef<HTMLElement>(null);
   const { introDone, scrollTo, ready } = useApp();
@@ -33,18 +59,28 @@ export default function HeroSection() {
   const isDesktop = useIsDesktop();
   const { hero: movie } = useCatalog();
 
+  /*
+   * Pre-stage. Runs on first paint, before the curtain lifts, so the hero is
+   * never seen in its finished state while the intro is still on screen. The
+   * entrance below then plays from exactly this pose.
+   */
+  useGSAP(
+    () => {
+      if (reducedMotion) return;
+      Object.entries(HERO_OPENING).forEach(([selector, state]) => {
+        gsap.set(selector, state);
+      });
+    },
+    { scope: rootRef, dependencies: [reducedMotion], revertOnUpdate: false },
+  );
+
   /* Entrance — waits for the intro curtain so the two never talk over each other. */
   useGSAP(
     () => {
       if (reducedMotion || !introDone) return;
       const tl = gsap.timeline({ defaults: { ease: EASE.cinema } });
 
-      tl.fromTo(
-        "[data-hero-bg]",
-        { opacity: 0, scale: 1.07 },
-        { opacity: 1, scale: 1, duration: 1.5 },
-        0,
-      )
+      tl.fromTo("[data-hero-bg]", { scale: 1.07 }, { scale: 1, duration: 1.5 }, 0)
         .fromTo(
           "[data-hero-atmos]",
           { opacity: 0 },
@@ -205,7 +241,8 @@ export default function HeroSection() {
               className="mt-5 max-w-xl text-base leading-relaxed text-fog-300/85 sm:text-[1.0625rem]"
             >
               Your next animated adventure starts here. A hand-curated universe of
-              hand-drawn and hand-built worlds — streaming in 4K HDR, on every screen you own.
+              animated films and anime — hand-drawn worlds streaming in 4K HDR, on
+              every screen you own.
             </p>
 
             {/* featured title */}
@@ -251,7 +288,7 @@ export default function HeroSection() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <span data-hero-cta className="inline-flex">
                   <MagneticButton onClick={() => open(movie)} cursor="play" variant="primary">
-                    Watch Now
+                    Watch in the app
                     <PlayGlyph />
                   </MagneticButton>
                 </span>
@@ -334,7 +371,7 @@ export default function HeroSection() {
                   type="button"
                   onClick={() => open(movie)}
                   data-cursor="play"
-                  aria-label={`Play ${movie.title}`}
+                  aria-label={`Watch ${movie.title} in the AnimatedPrime app`}
                   className="group grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/25 bg-white/12 text-fog-100 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:bg-white/20"
                 >
                   <span className="absolute h-14 w-14 animate-pulse-ring rounded-full border border-cyan/40" aria-hidden="true" />

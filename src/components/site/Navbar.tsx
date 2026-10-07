@@ -13,12 +13,23 @@ import { cn } from "@/lib/utils";
 const LINKS = [
   { label: "Home", href: "#top" },
   { label: "Movies", href: "#featured" },
-  { label: "Genres", href: "#genres" },
   { label: "Trending", href: "#trending" },
+  { label: "Anime", href: "#anime" },
+  { label: "Genres", href: "#genres" },
   { label: "App", href: "#app" },
 ];
 
-const SECTION_IDS = ["top", "featured", "trending", "genres", "immersive", "experience", "app", "explore"];
+const SECTION_IDS = [
+  "top",
+  "featured",
+  "trending",
+  "anime",
+  "genres",
+  "immersive",
+  "experience",
+  "app",
+  "explore",
+];
 
 function IconSearch() {
   return (
@@ -209,7 +220,16 @@ export default function Navbar({ release }: { release: AppRelease }) {
               variant="outline"
               size="md"
               label="Get the app"
-              className="mr-1 hidden !px-5 !py-2.5 !text-[0.8rem] lg:inline-flex"
+              /* `max-lg:hidden` rather than `hidden lg:inline-flex`: Tailwind emits
+                 `.inline-flex` *after* `.hidden`, so pairing them on one element
+                 leaves the CTA visible on phones — where it overflows the pill and
+                 pushes the menu button off screen. Keep the size overrides as v4
+                 important suffixes (`px-5!`), which the v3-style `!px-5` never
+                 generated. */
+              className="mr-1 max-lg:hidden px-5! py-2.5! text-[0.8rem]!"
+              /* the badge is a luxury, not a fixture — at lg the pill has no room
+                 for it and the profile avatar starts clipping */
+              badgeClassName="max-xl:hidden"
             />
 
             <button

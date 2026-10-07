@@ -117,7 +117,7 @@ export default function GenreSection() {
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">
         <SectionHeader
-          eyebrow="Chapter 03 — Genres"
+          eyebrow="Chapter 04 — Genres"
           title="Pick a *Doorway*"
           description="Eight moods, eight worlds. Choose the feeling you are after and we will open onto the right shelf."
           aside={

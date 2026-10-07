@@ -8,12 +8,13 @@ const STOPS = [
   { id: "top", label: "Intro", index: "01" },
   { id: "featured", label: "Featured", index: "02" },
   { id: "trending", label: "Trending", index: "03" },
-  { id: "genres", label: "Genres", index: "04" },
-  { id: "immersive", label: "3D World", index: "05" },
-  { id: "experience", label: "Experience", index: "06" },
-  { id: "app", label: "The app", index: "07" },
-  { id: "explore", label: "Explore", index: "08" },
-  { id: "start", label: "Start", index: "09" },
+  { id: "anime", label: "Anime", index: "04" },
+  { id: "genres", label: "Genres", index: "05" },
+  { id: "immersive", label: "3D World", index: "06" },
+  { id: "experience", label: "Experience", index: "07" },
+  { id: "app", label: "The app", index: "08" },
+  { id: "explore", label: "Explore", index: "09" },
+  { id: "start", label: "Start", index: "10" },
 ];
 
 const IDS = STOPS.map((stop) => stop.id);

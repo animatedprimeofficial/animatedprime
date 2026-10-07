@@ -41,6 +41,12 @@ export interface Movie {
   quality: string[];
   studio?: string;
   language?: string;
+  /**
+   * Japanese-origin animation. Tracked explicitly rather than inferred, because
+   * the anime rail is a first-class shelf here: this library is films *and*
+   * anime, not a cartoon shelf with a Japanese corner.
+   */
+  anime?: boolean;
   source: "tmdb" | "local";
 }
 
@@ -70,6 +76,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos"],
     studio: "Studio Ghibli",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -111,6 +118,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Original Score"],
     studio: "CoMix Wave Films",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -132,6 +140,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos"],
     studio: "Studio Ghibli",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -192,6 +201,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos"],
     studio: "Studio Ghibli",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -212,6 +222,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Family Friendly"],
     studio: "Studio Ghibli",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -232,6 +243,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos"],
     studio: "TMS Entertainment",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -252,6 +264,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Spatial Audio"],
     studio: "Production I.G",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -313,6 +326,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos"],
     studio: "ufotable",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -334,6 +348,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Dolby Atmos", "Original Score"],
     studio: "Studio Ghibli",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -394,6 +409,7 @@ export const LOCAL_MOVIES: Movie[] = [
     quality: ["4K HDR", "Spatial Audio"],
     studio: "Madhouse",
     language: "Japanese",
+    anime: true,
     source: "local",
   },
   {
@@ -488,4 +504,12 @@ export function pickRails(movies: Movie[]) {
     .sort((a, b) => (b.votes ?? b.rating * 100) - (a.votes ?? a.rating * 100))
     .slice(0, 7);
   return { featured, trending };
+}
+
+/** The anime shelf: best-rated Japanese animation, most-voted first on a tie. */
+export function pickAnime(movies: Movie[], count = 7): Movie[] {
+  return [...movies]
+    .filter((movie) => movie.anime)
+    .sort((a, b) => b.rating - a.rating || (b.votes ?? 0) - (a.votes ?? 0))
+    .slice(0, count);
 }

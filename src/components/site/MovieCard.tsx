@@ -134,12 +134,12 @@ function MovieCardInner({
             </button>
           </div>
 
-          {/* play affordance */}
+          {/* play affordance — playback lives in the app, so this opens the hand-off */}
           <button
             type="button"
             onClick={() => open(movie)}
             data-cursor="play"
-            aria-label={`Play ${movie.title}`}
+            aria-label={`Watch ${movie.title} in the AnimatedPrime app`}
             className="absolute left-1/2 top-1/2 z-20 grid h-16 w-16 -translate-x-1/2 -translate-y-1/2 scale-75 place-items-center rounded-full border border-white/25 bg-white/12 text-fog-100 opacity-0 backdrop-blur-md transition-all duration-500 ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-100 group-hover:opacity-100 hover:bg-white/20 focus-visible:scale-100 focus-visible:opacity-100"
           >
             <span className="absolute inset-0 -z-10 animate-pulse-ring rounded-full border border-cyan/40" aria-hidden="true" />

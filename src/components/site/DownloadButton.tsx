@@ -15,6 +15,8 @@ export interface DownloadButtonProps {
   /** "download" is platform-aware, "details" always reads as product info */
   mode?: "download" | "details";
   label?: string;
+  /** lets a tight layout (the navbar) hide the "downloaded" badge on its own */
+  badgeClassName?: string;
 }
 
 type Platform = "android" | "ios" | "desktop";
@@ -28,6 +30,7 @@ export default function DownloadButton({
   className,
   mode = "download",
   label,
+  badgeClassName,
 }: DownloadButtonProps) {
   const { release } = useRelease(seeded);
   const [platform, setPlatform] = useState<Platform>("desktop");
@@ -94,13 +97,19 @@ export default function DownloadButton({
             </svg>
           ) : (
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
-              <path d="M17.6 8.4h-3.9V6.6c0-1.1.9-2 2-2h.6V2.9c-.3 0-.7-.1-1.1-.1-1.9 0-3.3 1.4-3.3 3.3v2.3H7.6v2.8h4.3v8.6h3.9v-8.6h3.6l.6-2.8Z" />
+              {/* Android robot — the platform this build actually installs on */}
+              <path d="M17.6 9.48l1.84-3.18a.6.6 0 0 0-.22-.83.6.6 0 0 0-.82.23l-1.87 3.22a11.4 11.4 0 0 0-8.94 0L5.72 5.7a.6.6 0 0 0-.82-.23.6.6 0 0 0-.22.83l1.84 3.18A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52ZM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z" />
             </svg>
           )}
           {text}
         </span>
         {current && release.available ? (
-          <span className="ml-1 rounded-full border border-mint/40 px-2 py-0.5 text-[0.58rem] font-bold tracking-wide text-mint">
+          <span
+            className={cn(
+              "ml-1 rounded-full border border-mint/40 px-2 py-0.5 text-[0.58rem] font-bold tracking-wide text-mint",
+              badgeClassName,
+            )}
+          >
             v{release.version} downloaded
           </span>
         ) : null}
