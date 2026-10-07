@@ -4,11 +4,11 @@ import dynamic from "next/dynamic";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import Reveal from "@/components/anim/Reveal";
-import SceneArt from "@/components/art/SceneArt";
-import { MOVIES, TRENDING_MOVIES } from "@/lib/movies";
+import Artwork from "@/components/art/Artwork";
 import { cn } from "@/lib/utils";
 
 const ImmersiveCanvas = dynamic(() => import("@/components/three/ImmersiveCanvas"), {
@@ -39,6 +39,7 @@ export default function ImmersiveScene() {
   const progressRef = useRef(0);
   const barRef = useRef<HTMLSpanElement>(null);
   const { ready } = useApp();
+  const { movies, trending } = useCatalog();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
   const pinned = ready && isDesktop && !reducedMotion;
@@ -98,7 +99,7 @@ export default function ImmersiveScene() {
 
       return () => trigger.kill();
     },
-    { scope: rootRef, dependencies: [pinned], revertOnUpdate: true },
+    { scope: rootRef, dependencies: [pinned, movies.length], revertOnUpdate: true },
   );
 
   /* ---------------- Mobile / reduced-motion composition ---------------- */
@@ -127,22 +128,21 @@ export default function ImmersiveScene() {
           <div className="relative mt-10 h-[58svh] overflow-hidden rounded-[2rem] border border-white/10 bg-ink-900">
             {reducedMotion ? (
               <div className="grid h-full grid-cols-3 gap-3 p-4">
-                {TRENDING_MOVIES.slice(0, 3).map((movie) => (
+                {trending.slice(0, 3).map((movie) => (
                   <div key={movie.id} className="overflow-hidden rounded-xl border border-white/10">
-                    <SceneArt
-                      scene={movie.scene}
-                      palette={movie.palette}
+                    <Artwork
+                      movie={movie}
+                      variant="poster"
                       width={600}
                       height={900}
                       detail="simple"
-                      seed={`immersive-${movie.id}`}
-                      className="h-full w-full object-cover"
+                      sizes="30vw"
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <ImmersiveCanvas movies={MOVIES} progress={progressRef} lowPower idle />
+              <ImmersiveCanvas movies={movies} progress={progressRef} lowPower idle />
             )}
           </div>
 
@@ -172,7 +172,7 @@ export default function ImmersiveScene() {
         />
 
         <div data-immersive-frame className="absolute inset-0">
-          <ImmersiveCanvas movies={MOVIES} progress={progressRef} />
+          <ImmersiveCanvas movies={movies} progress={progressRef} />
         </div>
 
         <div

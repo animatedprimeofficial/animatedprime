@@ -11,8 +11,9 @@ const STOPS = [
   { id: "genres", label: "Genres", index: "04" },
   { id: "immersive", label: "3D World", index: "05" },
   { id: "experience", label: "Experience", index: "06" },
-  { id: "explore", label: "Explore", index: "07" },
-  { id: "start", label: "Start", index: "08" },
+  { id: "app", label: "The app", index: "07" },
+  { id: "explore", label: "Explore", index: "08" },
+  { id: "start", label: "Start", index: "09" },
 ];
 
 const IDS = STOPS.map((stop) => stop.id);

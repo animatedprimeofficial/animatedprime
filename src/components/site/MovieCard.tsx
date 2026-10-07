@@ -1,7 +1,7 @@
 "use client";
 
 import { memo } from "react";
-import SceneArt from "@/components/art/SceneArt";
+import Artwork from "@/components/art/Artwork";
 import TiltCard from "@/components/anim/TiltCard";
 import { RatingBadge } from "@/components/ui/Pill";
 import { usePlayer } from "@/components/providers/PlayerProvider";
@@ -50,6 +50,7 @@ function MovieCardInner({
   rank,
   className,
   animatedArt = false,
+  priority = false,
 }: MovieCardProps) {
   const { open } = usePlayer();
   const watchlist = useWatchlist();
@@ -83,15 +84,15 @@ function MovieCardInner({
           {/* artwork */}
           <div className="absolute inset-0 overflow-hidden">
             <div className="h-full w-full scale-[1.02] transition-transform duration-[900ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-[1.12]">
-              <SceneArt
-                scene={movie.scene}
-                palette={movie.palette}
+              <Artwork
+                movie={movie}
+                variant="poster"
                 width={800}
                 height={1200}
                 detail="simple"
                 animate={animatedArt}
-                seed={movie.id}
-                className="h-full w-full object-cover"
+                priority={priority}
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22rem"
               />
             </div>
           </div>
@@ -159,10 +160,12 @@ function MovieCardInner({
 
             <div className="flex items-center gap-2.5 text-xs text-fog-500">
               <RatingBadge value={movie.rating} className="border-amber/20 px-2 py-0.5 text-[0.68rem]" />
-              <span>{movie.duration}</span>
-              <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem] tracking-wider">
-                {movie.maturity}
-              </span>
+              {movie.duration ? <span>{movie.duration}</span> : null}
+              {movie.maturity ? (
+                <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem] tracking-wider">
+                  {movie.maturity}
+                </span>
+              ) : null}
             </div>
 
             <p className="max-h-0 overflow-hidden text-[0.8rem] leading-relaxed text-fog-300/0 transition-all duration-600 ease-[cubic-bezier(.16,1,.3,1)] group-hover:max-h-24 group-hover:text-fog-300/90 max-sm:max-h-24 max-sm:text-fog-300/80">

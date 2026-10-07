@@ -1,15 +1,55 @@
 "use client";
 
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useExplorer } from "@/components/providers/ExplorerProvider";
 import { useReducedMotion } from "@/hooks/useMediaQuery";
 import SectionHeader from "@/components/ui/SectionHeader";
 import HoverParallax from "@/components/anim/HoverParallax";
+import Artwork from "@/components/art/Artwork";
 import SceneArt from "@/components/art/SceneArt";
-import { GENRES, genreCount } from "@/lib/movies";
+import { GENRES, genreCount, type Movie } from "@/lib/movies";
 import { cn } from "@/lib/utils";
+
+/**
+ * Each shelf leads with real artwork from its best-rated title, and drops back
+ * to the genre's own procedural scene if the catalogue has nothing on it yet —
+ * so a doorway is always a picture, never an empty card.
+ */
+function GenreArt({ movies, genre }: { movies: Movie[]; genre: string }) {
+  const definition = GENRES.find((entry) => entry.name === genre);
+  const lead = useMemo(
+    () => [...movies].filter((movie) => movie.genre.includes(genre)).sort((a, b) => b.rating - a.rating)[0],
+    [movies, genre],
+  );
+
+  if (!lead) {
+    return (
+      <SceneArt
+        scene={definition?.scene ?? "skywhale"}
+        palette={definition?.palette ?? "violet-dusk"}
+        width={820}
+        height={1024}
+        detail="simple"
+        seed={`genre-${genre}`}
+        className="h-full w-full object-cover"
+      />
+    );
+  }
+
+  return (
+    <Artwork
+      movie={lead}
+      variant="poster"
+      width={820}
+      height={1024}
+      detail="simple"
+      sizes="(max-width: 640px) 45vw, 24vw"
+    />
+  );
+}
 
 /**
  * Genres as destination art rather than buttons. Each card carries its own
@@ -18,6 +58,7 @@ import { cn } from "@/lib/utils";
 export default function GenreSection() {
   const rootRef = useRef<HTMLElement>(null);
   const { ready, scrollTo } = useApp();
+  const { movies } = useCatalog();
   const { setGenre, setQuery } = useExplorer();
   const reducedMotion = useReducedMotion();
 
@@ -109,15 +150,7 @@ export default function GenreSection() {
                   className="relative aspect-[4/5] w-full rounded-[1.6rem] border border-white/8 bg-ink-850 transition-[border-color,box-shadow] duration-500 group-hover:border-white/20 group-hover:shadow-[0_40px_90px_-40px_rgba(124,92,255,0.5)]"
                 >
                   <div data-parallax-layer className="absolute inset-[-6%]">
-                    <SceneArt
-                      scene={genre.scene}
-                      palette={genre.palette}
-                      width={820}
-                      height={1024}
-                      detail="simple"
-                      seed={`genre-${genre.name}`}
-                      className="h-full w-full object-cover"
-                    />
+                    <GenreArt movies={movies} genre={genre.name} />
                   </div>
 
                   <div
@@ -131,7 +164,7 @@ export default function GenreSection() {
 
                   <div className="absolute inset-x-0 bottom-0 flex flex-col gap-1.5 p-5">
                     <span className="text-[0.6rem] font-semibold tracking-[0.24em] text-cyan uppercase">
-                      {String(genreCount(genre.name)).padStart(2, "0")} titles
+                      {String(genreCount(movies, genre.name)).padStart(2, "0")} titles
                     </span>
                     <span className="font-display text-xl font-bold tracking-[-0.03em] text-fog-100 sm:text-[1.4rem]">
                       {genre.name}

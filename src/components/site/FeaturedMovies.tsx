@@ -3,10 +3,10 @@
 import { useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MovieCard from "@/components/site/MovieCard";
-import { FEATURE_MOVIES } from "@/lib/movies";
 import { cn } from "@/lib/utils";
 
 /**
@@ -22,6 +22,7 @@ export default function FeaturedMovies() {
   const trackRef = useRef<HTMLDivElement>(null);
   const barRef = useRef<HTMLSpanElement>(null);
   const { ready } = useApp();
+  const { featured } = useCatalog();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
   const pinned = ready && isDesktop && !reducedMotion;
@@ -100,7 +101,7 @@ export default function FeaturedMovies() {
                 </div>
                 <div className="flex items-center justify-between text-[0.62rem] font-semibold tracking-[0.24em] text-fog-700 uppercase">
                   <span>Scroll →</span>
-                  <span>{FEATURE_MOVIES.length} titles</span>
+                  <span>{featured.length} titles</span>
                 </div>
               </div>
             }
@@ -116,7 +117,7 @@ export default function FeaturedMovies() {
               pinned ? "w-max will-change-transform" : "no-scrollbar snap-x snap-mandatory overflow-x-auto",
             )}
           >
-            {FEATURE_MOVIES.map((movie, index) => (
+            {featured.map((movie, index) => (
               <div
                 key={movie.id}
                 data-h-card

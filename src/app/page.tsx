@@ -5,6 +5,7 @@ import Footer from "@/components/site/Footer";
 import GenreSection from "@/components/site/GenreSection";
 import HeroSection from "@/components/site/HeroSection";
 import ImmersiveScene from "@/components/site/ImmersiveScene";
+import MobileAppSection from "@/components/site/MobileAppSection";
 import MovieExplorer from "@/components/site/MovieExplorer";
 import TickerBand from "@/components/site/TickerBand";
 import TrendingMovies from "@/components/site/TrendingMovies";
@@ -19,6 +20,7 @@ export default function Home() {
       <GenreSection />
       <ImmersiveScene />
       <ExperienceSection />
+      <MobileAppSection />
       <MovieExplorer />
       <CTASection />
       <Footer />

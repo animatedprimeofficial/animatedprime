@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { usePlayer } from "@/components/providers/PlayerProvider";
 import { useApp } from "@/components/providers/AppProvider";
-import SceneArt from "@/components/art/SceneArt";
+import Artwork from "@/components/art/Artwork";
 import { RatingBadge } from "@/components/ui/Pill";
 
 /**
@@ -87,14 +87,13 @@ export default function PlayerOverlay() {
       className="fixed inset-0 z-[140] flex items-end justify-center overflow-hidden bg-ink-950/80 backdrop-blur-xl sm:items-center"
     >
       <div data-player-art className="pointer-events-none absolute inset-0 opacity-70">
-        <SceneArt
-          scene={movie.scene}
-          palette={movie.palette}
+        <Artwork
+          movie={movie}
+          variant="backdrop"
           width={1600}
           height={900}
           animate
-          seed={`${movie.id}-player`}
-          className="h-full w-full object-cover"
+          sizes="100vw"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-ink-950 via-ink-950/70 to-ink-950/40" />
       </div>
@@ -132,10 +131,12 @@ export default function PlayerOverlay() {
             </span>
           ))}
           <span>{movie.year}</span>
-          <span>{movie.duration}</span>
-          <span className="rounded border border-white/15 px-1.5 py-0.5 text-[0.65rem] tracking-wider">
-            {movie.maturity}
-          </span>
+          {movie.duration ? <span>{movie.duration}</span> : null}
+          {movie.maturity ? (
+            <span className="rounded border border-white/15 px-1.5 py-0.5 text-[0.65rem] tracking-wider">
+              {movie.maturity}
+            </span>
+          ) : null}
         </div>
 
         <div className="mt-8">
@@ -155,7 +156,8 @@ export default function PlayerOverlay() {
         </div>
 
         <p className="mt-8 text-xs text-fog-700">
-          {movie.studio} · AnimatedPrime Original. Press <kbd className="rounded border border-white/15 px-1.5 py-0.5 text-fog-300">Esc</kbd> to close.
+          {[movie.studio, movie.language].filter(Boolean).join(" · ") || "AnimatedPrime"} · Preview.
+          Press <kbd className="rounded border border-white/15 px-1.5 py-0.5 text-fog-300">Esc</kbd> to close.
         </p>
       </div>
     </div>

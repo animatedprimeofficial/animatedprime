@@ -3,13 +3,14 @@
 import { useMemo, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useExplorer, type ExplorerSort } from "@/components/providers/ExplorerProvider";
 import { usePlayer } from "@/components/providers/PlayerProvider";
 import { useReducedMotion } from "@/hooks/useMediaQuery";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MovieCard from "@/components/site/MovieCard";
 import MagneticButton from "@/components/anim/MagneticButton";
-import { GENRES, MOVIES } from "@/lib/movies";
+import { GENRES } from "@/lib/movies";
 import { cn } from "@/lib/utils";
 
 const SORTS: { id: ExplorerSort; label: string }[] = [
@@ -23,17 +24,26 @@ const GENRE_CHIPS = ["All", ...GENRES.map((genre) => genre.name)];
 export default function MovieExplorer() {
   const { query, setQuery, genre, setGenre, sort, setSort, reset } = useExplorer();
   const { open } = usePlayer();
+  const { movies } = useCatalog();
   const { ready } = useApp();
   const reducedMotion = useReducedMotion();
   const gridRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    const filtered = MOVIES.filter((movie) => {
+    const filtered = movies.filter((movie) => {
       const matchesGenre = genre === "All" || movie.genre.includes(genre);
       if (!matchesGenre) return false;
       if (!needle) return true;
-      const haystack = [movie.title, movie.tagline, movie.description, movie.genre.join(" "), movie.studio]
+      const haystack = [
+        movie.title,
+        movie.originalTitle,
+        movie.tagline,
+        movie.description,
+        movie.genre.join(" "),
+        movie.studio,
+      ]
+        .filter(Boolean)
         .join(" ")
         .toLowerCase();
       return haystack.includes(needle);
@@ -45,7 +55,14 @@ export default function MovieExplorer() {
     if (sort === "new") return [...filtered].sort((a, b) => b.year - a.year || b.rating - a.rating);
     if (sort === "top") return [...filtered].sort((a, b) => b.rating - a.rating || b.year - a.year);
     return [...filtered].sort(byPopularity);
-  }, [query, genre, sort]);
+  }, [movies, query, genre, sort]);
+
+  // Picked inside the handler rather than during render so the server and the
+  // client can never disagree about which title "Surprise me" opens.
+  const surprise = () => {
+    if (!movies.length) return;
+    open(movies[Math.floor(Math.random() * movies.length)]);
+  };
 
   const signature = `${sort}|${genre}|${results.map((movie) => movie.id).join(",")}`;
 
@@ -82,15 +99,11 @@ export default function MovieExplorer() {
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">
         <SectionHeader
-          eyebrow="Chapter 06 — Discovery"
+          eyebrow="Chapter 07 — Discovery"
           title="Find Your *Next World*"
           description="Search the library, filter by mood, or let us choose. Every result plays in the quality your screen deserves."
           aside={
-            <MagneticButton
-              variant="outline"
-              cursor="play"
-              onClick={() => open(MOVIES[Math.floor(Math.random() * MOVIES.length)])}
-            >
+            <MagneticButton variant="outline" cursor="play" onClick={surprise}>
               Surprise me
               <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
                 <path d="M12 3.5l2.4 5.1 5.6.7-4.1 3.9 1.1 5.5-5-2.8-5 2.8 1.1-5.5L3.9 9.3l5.6-.7L12 3.5Z" strokeLinejoin="round" />

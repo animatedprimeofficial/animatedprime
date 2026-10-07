@@ -4,13 +4,13 @@ import dynamic from "next/dynamic";
 import { useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { usePlayer } from "@/components/providers/PlayerProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import MagneticButton from "@/components/anim/MagneticButton";
-import SceneArt from "@/components/art/SceneArt";
+import Artwork from "@/components/art/Artwork";
 import { RatingBadge } from "@/components/ui/Pill";
-import { HERO_MOVIE } from "@/lib/movies";
 import { cn } from "@/lib/utils";
 
 const HeroAtmosphere = dynamic(() => import("@/components/three/HeroAtmosphere"), {
@@ -31,7 +31,7 @@ export default function HeroSection() {
   const { open } = usePlayer();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
-  const movie = HERO_MOVIE;
+  const { hero: movie } = useCatalog();
 
   /* Entrance — waits for the intro curtain so the two never talk over each other. */
   useGSAP(
@@ -150,16 +150,16 @@ export default function HeroSection() {
           copy instead of stacking below it, so the first screen is the poster */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-[62%] overflow-hidden lg:hidden">
         <div className="absolute inset-[-6%] scale-110">
-          <SceneArt
-            scene={movie.scene}
-            palette={movie.palette}
+          <Artwork
+            movie={movie}
+            variant="poster"
             width={900}
             height={1200}
             horizon={0.94}
             detail="simple"
             animate={!reducedMotion}
-            seed="hero-mobile-art"
-            className="h-full w-full object-cover"
+            priority
+            sizes="100vw"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-ink-950/45 via-ink-950/10 to-ink-950" />
@@ -218,11 +218,17 @@ export default function HeroSection() {
                 <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
                 <RatingBadge value={movie.rating} className="px-2.5 py-0.5" />
                 <span>{movie.year}</span>
-                <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
-                <span>{movie.duration}</span>
-                <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem]">
-                  {movie.maturity}
-                </span>
+                {movie.duration ? (
+                  <>
+                    <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
+                    <span>{movie.duration}</span>
+                  </>
+                ) : null}
+                {movie.maturity ? (
+                  <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem]">
+                    {movie.maturity}
+                  </span>
+                ) : null}
               </div>
 
               <h2 className="display-md mt-3.5 text-fog-100">{movie.title}</h2>
@@ -282,15 +288,15 @@ export default function HeroSection() {
               className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.6rem] border border-white/10 shadow-[0_60px_140px_-50px_rgba(0,0,0,0.95)] sm:aspect-[5/6]"
             >
               <div data-hero-art-inner className="absolute inset-0 scale-[1.02]">
-                <SceneArt
-                  scene={movie.scene}
-                  palette={movie.palette}
+                <Artwork
+                  movie={movie}
+                  variant="poster"
                   width={900}
                   height={1125}
                   detail="full"
                   animate
-                  seed="hero-key-art"
-                  className="h-full w-full object-cover"
+                  priority
+                  sizes="46vw"
                 />
               </div>
 
@@ -304,8 +310,8 @@ export default function HeroSection() {
               />
 
               <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-3">
-                <span className="rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-fog-300 uppercase backdrop-blur-md">
-                  AnimatedPrime Original
+                <span className="max-w-[62%] truncate rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-fog-300 uppercase backdrop-blur-md">
+                  {movie.studio ?? "AnimatedPrime Select"}
                 </span>
                 <span className="rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-cyan uppercase backdrop-blur-md">
                   {movie.quality[0]}
@@ -314,12 +320,14 @@ export default function HeroSection() {
 
               <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-6">
                 <div>
-                  <p className="eyebrow text-fog-500">This week&apos;s premiere</p>
+                  <p className="eyebrow text-fog-500">
+                    {movie.source === "tmdb" ? "In the spotlight" : "This week's premiere"}
+                  </p>
                   <p className="mt-2 font-display text-xl font-bold tracking-[-0.03em] text-fog-100 sm:text-2xl">
                     {movie.title}
                   </p>
                   <p className="mt-1 text-xs text-fog-500">
-                    {movie.genre.join(" · ")}
+                    {[movie.studio, movie.genre.join(" · ")].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <button
@@ -358,8 +366,11 @@ export default function HeroSection() {
               <span>
                 <span className="block text-[0.6rem] font-semibold tracking-[0.2em] text-fog-500 uppercase">
                   Critic score
-                </span>
-                <span className="block text-xs text-fog-300">12.4k reviews</span>
+                </span>                  <span className="block text-xs text-fog-300">
+                    {movie.votes
+                      ? `${movie.votes.toLocaleString("en-US")} reviews`
+                      : "Audience favourite"}
+                  </span>
               </span>
             </div>
           </div>

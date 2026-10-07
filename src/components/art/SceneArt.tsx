@@ -76,6 +76,14 @@ function anim(
 
 /* ------------------------------------------------------------------ *
  * Shared primitives
+ *
+ * These are pure render helpers, not components: they are invoked as plain
+ * functions from the scenes below. The scene tree shares one seeded generator,
+ * and React may invoke a component body more than once (StrictMode does it on
+ * purpose in development), which would drain extra values out of that shared
+ * sequence and produce markup that no longer matches the server's. Running the
+ * helpers inline means the sequence is consumed exactly once per render, so the
+ * server and the client always draw identical artwork.
  * ------------------------------------------------------------------ */
 function Stars({
   f,
@@ -170,7 +178,7 @@ function SkyWhale({ f, p, rng, id }: SceneProps) {
         </radialGradient>
       </defs>
 
-      <Stars f={f} rng={rng} count={110} colors={["#ffffff", p.accent, p.glow]} spread={0.6} keyPrefix={`${id}st`} />
+      {Stars({ f, rng, count: 110, colors: ["#ffffff", p.accent, p.glow], spread: 0.6, keyPrefix: `${id}st` })}
 
       <circle cx={f.w * 0.16} cy={f.h * 0.19} r={f.unit * 0.34} fill={`url(#${id}-planet)`} />
       <ellipse
@@ -274,7 +282,7 @@ function SkyWhale({ f, p, rng, id }: SceneProps) {
         </g>
       </g>
 
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -298,7 +306,7 @@ function Dunes({ f, p, rng, id }: SceneProps) {
         </radialGradient>
       </defs>
 
-      <Stars f={f} rng={rng} count={46} colors={["#ffffff", p.glow]} spread={0.4} keyPrefix={`${id}st`} />
+      {Stars({ f, rng, count: 46, colors: ["#ffffff", p.glow], spread: 0.4, keyPrefix: `${id}st` })}
 
       <circle cx={sunX} cy={sunY} r={sunR * 2.1} fill={`url(#${id}-sun)`} opacity={0.34} filter={`url(#${id}-blur60)`} />
       <circle cx={sunX} cy={sunY} r={sunR} fill="#fff4dc" opacity={0.92} style={anim(f, "ap-breathe", 9)} />
@@ -346,8 +354,8 @@ function Dunes({ f, p, rng, id }: SceneProps) {
         <circle cx="24" cy="-64" r="4" fill={p.glow} style={anim(f, "ap-flicker", 3)} />
       </g>
 
-      <Birds f={f} rng={rng} count={3} y={f.h * 0.3} color={p.ink} />
-      <Vignette f={f} p={p} id={id} />
+      {Birds({ f, rng, count: 3, y: f.h * 0.3, color: p.ink })}
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -457,7 +465,7 @@ function Forest({ f, p, rng, id }: SceneProps) {
         <circle cx="22" cy="-30" r="16" fill={p.accent2} opacity={0.22} filter={`url(#${id}-blur30)`} />
       </g>
 
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -565,7 +573,7 @@ function Reef({ f, p, rng, id }: SceneProps) {
         );
       })}
 
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -630,8 +638,8 @@ function Islands({ f, p, rng, id }: SceneProps) {
         </g>
       </g>
 
-      <Birds f={f} rng={rng} count={4} y={f.h * 0.5} color={p.ink} />
-      <Vignette f={f} p={p} id={id} />
+      {Birds({ f, rng, count: 4, y: f.h * 0.5, color: p.ink })}
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -655,7 +663,7 @@ function Neon({ f, p, rng, id }: SceneProps) {
         </linearGradient>
       </defs>
 
-      <Stars f={f} rng={rng} count={54} colors={["#ffffff", p.accent2]} spread={0.42} keyPrefix={`${id}st`} />
+      {Stars({ f, rng, count: 54, colors: ["#ffffff", p.accent2], spread: 0.42, keyPrefix: `${id}st` })}
 
       <circle cx={vpX} cy={horizon - f.h * 0.14} r={f.unit * 0.36} fill={`url(#${id}-sun)`} />
       <circle cx={vpX} cy={horizon - f.h * 0.14} r={f.unit * 0.2} fill={p.accent2} opacity={0.55} />
@@ -743,7 +751,7 @@ function Neon({ f, p, rng, id }: SceneProps) {
         filter={`url(#${id}-blur30)`}
         style={anim(f, "ap-breathe", 4)}
       />
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -762,7 +770,7 @@ function Aurora({ f, p, rng, id }: SceneProps) {
         </linearGradient>
       </defs>
 
-      <Stars f={f} rng={rng} count={140} colors={["#ffffff", p.accent2, p.glow]} spread={0.7} keyPrefix={`${id}st`} />
+      {Stars({ f, rng, count: 140, colors: ["#ffffff", p.accent2, p.glow], spread: 0.7, keyPrefix: `${id}st` })}
       <circle cx={f.w * 0.8} cy={f.h * 0.14} r={f.unit * 0.07} fill="#f6fbff" opacity={0.95} />
       <circle cx={f.w * 0.8} cy={f.h * 0.14} r={f.unit * 0.19} fill={p.accent2} opacity={0.16} filter={`url(#${id}-blur60)`} />
 
@@ -812,7 +820,7 @@ function Aurora({ f, p, rng, id }: SceneProps) {
         style={anim(f, "ap-breathe", 5)}
       />
 
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -850,7 +858,7 @@ function Clockwork({ f, p, rng, id }: SceneProps) {
         </radialGradient>
       </defs>
 
-      <Stars f={f} rng={rng} count={70} colors={["#ffffff", p.accent, p.glow]} spread={0.5} keyPrefix={`${id}st`} />
+      {Stars({ f, rng, count: 70, colors: ["#ffffff", p.accent, p.glow], spread: 0.5, keyPrefix: `${id}st` })}
       <circle cx={cx} cy={cy} r={r * 2.2} fill={`url(#${id}-halo)`} filter={`url(#${id}-blur60)`} />
 
       <g transform={`translate(${cx} ${cy})`}>
@@ -910,7 +918,7 @@ function Clockwork({ f, p, rng, id }: SceneProps) {
         />
       ))}
 
-      <Vignette f={f} p={p} id={id} />
+      {Vignette({ f, p, id })}
     </>
   );
 }
@@ -966,6 +974,8 @@ function SceneArtInner({
   const rawId = useId().replace(/[^a-zA-Z0-9]/g, "");
   const id = `ap${rawId}`;
   const p = getPalette(palette);
+  // One generator per render, created fresh from the seed: whatever React does
+  // with this component body, the sequence always starts in the same place.
   const rng = makeRng(hashString(`${seed}-${palette}-${scene}-${width}x${height}`));
   const wide = width / height > 1.25;
 
@@ -1013,7 +1023,7 @@ function SceneArtInner({
       </defs>
 
       <rect width={width} height={height} fill={`url(#${id}-sky)`} />
-      <Scene f={f} p={p} rng={rng} id={id} />
+      {Scene({ f, p, rng, id })}
     </svg>
   );
 }

@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useRef, type RefObject } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useReducedMotion } from "@/hooks/useMediaQuery";
 import { useDragScroll } from "@/hooks/useDragScroll";
 import SectionHeader from "@/components/ui/SectionHeader";
 import MovieCard from "@/components/site/MovieCard";
-import { TRENDING_MOVIES } from "@/lib/movies";
 import { cn } from "@/lib/utils";
 
 function Chevron({ direction }: { direction: "left" | "right" }) {
@@ -31,6 +31,7 @@ export default function TrendingMovies() {
   const thumbRef = useRef<HTMLSpanElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const { ready } = useApp();
+  const { trending } = useCatalog();
   const reducedMotion = useReducedMotion();
   const { ref: dragRef, dragging } = useDragScroll<HTMLDivElement>();
 
@@ -56,7 +57,7 @@ export default function TrendingMovies() {
       }
       if (counterRef.current) {
         counterRef.current.textContent = String(
-          Math.min(TRENDING_MOVIES.length, Math.round(progress * (TRENDING_MOVIES.length - 1)) + 1),
+          Math.min(trending.length, Math.round(progress * (trending.length - 1)) + 1),
         ).padStart(2, "0");
       }
     };
@@ -71,7 +72,7 @@ export default function TrendingMovies() {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [trending.length]);
 
   const nudge = (direction: 1 | -1) => {
     const el = railRef.current;
@@ -120,7 +121,7 @@ export default function TrendingMovies() {
                   01
                 </span>
                 {" / "}
-                {String(TRENDING_MOVIES.length).padStart(2, "0")}
+                {String(trending.length).padStart(2, "0")}
               </span>
               <div className="flex gap-2">
                 <button
@@ -156,7 +157,7 @@ export default function TrendingMovies() {
             dragging ? "[scroll-snap-type:none]" : "",
           )}
         >
-          {TRENDING_MOVIES.map((movie, index) => (
+          {trending.map((movie, index) => (
             <div
               key={movie.id}
               data-t-card

@@ -1,0 +1,11 @@
+{
+  "version": "1.4.0",
+  "channel": "stable",
+  "minAndroid": "Android 9 (API 28)",
+  "changelog": [
+    "New: offline downloads for the whole family profile.",
+    "New: continue-watching handoff between phone, tablet and TV.",
+    "Faster cold start on mid-range devices.",
+    "Fixed: subtitles drifting on long Dolby Atmos titles."
+  ]
+}

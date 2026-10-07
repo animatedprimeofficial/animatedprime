@@ -2,9 +2,12 @@ import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter, Outfit } from "next/font/google";
 import "./globals.css";
 import { AppProvider } from "@/components/providers/AppProvider";
+import { CatalogProvider } from "@/components/providers/CatalogProvider";
 import { ExplorerProvider } from "@/components/providers/ExplorerProvider";
 import { PlayerProvider } from "@/components/providers/PlayerProvider";
 import { WatchlistProvider } from "@/components/providers/WatchlistProvider";
+import { getCatalog } from "@/lib/catalog";
+import { getRelease } from "@/lib/release";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -63,9 +66,13 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Live catalogue + release facts are resolved on the server so the first
+  // paint already carries real titles, posters and build information.
+  const [catalog, release] = await Promise.all([getCatalog(), getRelease()]);
+
   return (
     <html
       lang="en"
@@ -73,15 +80,17 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="relative antialiased">
-        <ExplorerProvider>
-          <WatchlistProvider>
-            <PlayerProvider>
-              <AppProvider>
-                <main id="main">{children}</main>
-              </AppProvider>
-            </PlayerProvider>
-          </WatchlistProvider>
-        </ExplorerProvider>
+        <CatalogProvider catalog={catalog}>
+          <ExplorerProvider>
+            <WatchlistProvider>
+              <PlayerProvider>
+                <AppProvider release={release}>
+                  <main id="main">{children}</main>
+                </AppProvider>
+              </PlayerProvider>
+            </WatchlistProvider>
+          </ExplorerProvider>
+        </CatalogProvider>
       </body>
     </html>
   );
