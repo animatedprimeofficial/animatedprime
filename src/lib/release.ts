@@ -15,6 +15,15 @@ export interface AppRelease {
   downloadUrl?: string;
   /** external links open in a new tab with the release page as the referrer */
   external: boolean;
+  /**
+   * A second, public route to the same artifact — an upload page on a file host.
+   * Present even when the local build is missing, so a deploy that ships without
+   * the (large, git-ignored) APK can still hand people the app.
+   */
+  mirror?: {
+    label: string;
+    url: string;
+  };
   sizeBytes?: number;
   sizeLabel?: string;
   sha256?: string;
@@ -28,10 +37,10 @@ export interface AppRelease {
 const DOWNLOAD_DIR = path.join(process.cwd(), "public", "downloads");
 
 const DEFAULTS = {
-  version: process.env.ANDROID_APK_VERSION ?? "1.4.0",
+  version: process.env.ANDROID_APK_VERSION ?? "1.0.0",
   channel: (process.env.ANDROID_APK_CHANNEL as "stable" | "beta" | undefined) ?? "stable",
-  minAndroid: process.env.ANDROID_MIN_ANDROID ?? "Android 9 (API 28)",
-  targetAndroid: "Android 15 (API 35)",
+  minAndroid: process.env.ANDROID_MIN_ANDROID ?? "Android 6.0 (API 23)",
+  targetAndroid: process.env.ANDROID_TARGET_ANDROID ?? "Android 16 (API 36)",
   changelog: [
     "New: offline downloads for the whole family profile.",
     "New: continue-watching handoff between phone, tablet and TV.",
@@ -44,7 +53,26 @@ interface ReleaseManifest {
   version?: string;
   channel?: "stable" | "beta";
   minAndroid?: string;
+  targetAndroid?: string;
+  mirror?: {
+    label?: string;
+    url?: string;
+  };
   changelog?: string[];
+}
+
+/**
+ * The mirror link. `release.json` carries it so the URL lives with the rest of
+ * the release facts; the env vars win so a release can be repointed at a fresh
+ * upload without editing a file that ships with the build.
+ */
+function resolveMirror(manifest: ReleaseManifest | null): AppRelease["mirror"] {
+  const url = process.env.ANDROID_APK_MIRROR_URL ?? manifest?.mirror?.url;
+  if (!url) return undefined;
+  return {
+    label: process.env.ANDROID_APK_MIRROR_LABEL ?? manifest?.mirror?.label ?? "the mirror",
+    url,
+  };
 }
 
 function humanSize(bytes: number): string {
@@ -95,10 +123,12 @@ async function readManifest(): Promise<ReleaseManifest | null> {
 async function resolveRelease(): Promise<AppRelease> {
   const checkedAt = new Date().toISOString();
   const manifest = await readManifest();
+  const mirror = resolveMirror(manifest);
   const meta = {
     version: manifest?.version ?? DEFAULTS.version,
     channel: manifest?.channel ?? DEFAULTS.channel,
     minAndroid: manifest?.minAndroid ?? DEFAULTS.minAndroid,
+    targetAndroid: manifest?.targetAndroid ?? DEFAULTS.targetAndroid,
     changelog: manifest?.changelog ?? DEFAULTS.changelog,
   };
 
@@ -116,12 +146,13 @@ async function resolveRelease(): Promise<AppRelease> {
         fileName: apk,
         downloadUrl: `/downloads/${apk}`,
         external: false,
+        mirror,
         sizeBytes: stats.size,
         sizeLabel: humanSize(stats.size),
         sha256,
         releasedAt: stats.mtime.toISOString(),
         minAndroid: meta.minAndroid,
-        targetAndroid: DEFAULTS.targetAndroid,
+        targetAndroid: meta.targetAndroid,
         changelog: meta.changelog,
         checkedAt,
       };
@@ -140,11 +171,12 @@ async function resolveRelease(): Promise<AppRelease> {
       fileName: `animatedprime-android-${meta.version}.apk`,
       downloadUrl: externalUrl,
       external: true,
+      mirror,
       sizeLabel: process.env.ANDROID_APK_SIZE,
       sha256: process.env.ANDROID_APK_SHA256,
       releasedAt: process.env.ANDROID_APK_RELEASED_AT,
       minAndroid: meta.minAndroid,
-      targetAndroid: DEFAULTS.targetAndroid,
+      targetAndroid: meta.targetAndroid,
       changelog: meta.changelog,
       checkedAt,
     };
@@ -157,8 +189,9 @@ async function resolveRelease(): Promise<AppRelease> {
     channel: meta.channel,
     fileName: `animatedprime-android-${meta.version}.apk`,
     external: false,
+    mirror,
     minAndroid: meta.minAndroid,
-    targetAndroid: DEFAULTS.targetAndroid,
+    targetAndroid: meta.targetAndroid,
     changelog: meta.changelog,
     checkedAt,
   };

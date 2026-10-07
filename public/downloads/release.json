@@ -1,7 +1,12 @@
 {
-  "version": "1.4.0",
+  "version": "1.0.0",
   "channel": "stable",
-  "minAndroid": "Android 9 (API 28)",
+  "minAndroid": "Android 6.0 (API 23)",
+  "targetAndroid": "Android 16 (API 36)",
+  "mirror": {
+    "label": "Appho.st",
+    "url": "https://appho.st/d/iIS54ve5"
+  },
   "changelog": [
     "New: offline downloads for the whole family profile.",
     "New: continue-watching handoff between phone, tablet and TV.",

@@ -6,6 +6,7 @@ import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useMounted, useReducedMotion } from "@/hooks/useMediaQuery";
 import { requestReleaseRefresh } from "@/hooks/useRelease";
+import MirrorLink from "@/components/site/MirrorLink";
 import { LogoMark } from "@/components/ui/Logo";
 import type { AppRelease } from "@/lib/release";
 import { cn } from "@/lib/utils";
@@ -421,6 +422,8 @@ export default function ApkDownloadDialog({
                 )}
                 {primaryLabel}
               </button>
+
+              {release.mirror ? <MirrorLink mirror={release.mirror} /> : null}
             </div>
           </div>
         ) : null}
@@ -472,6 +475,15 @@ export default function ApkDownloadDialog({
                 </p>
               </form>
             )}
+
+            {/* A mirror means the app is downloadable even when this deploy
+                could not carry the (large, git-ignored) build. */}
+            {release.mirror ? (
+              <p className="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 border-t border-white/8 pt-4 text-[0.68rem] text-fog-700">
+                <span>The current build is already live on</span>
+                <MirrorLink mirror={release.mirror} variant="inline" className="text-[0.68rem]" />
+              </p>
+            ) : null}
           </div>
         ) : null}
 

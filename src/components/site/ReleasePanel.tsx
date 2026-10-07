@@ -1,6 +1,7 @@
 "use client";
 
 import DownloadButton from "@/components/site/DownloadButton";
+import MirrorLink from "@/components/site/MirrorLink";
 import { useRelease } from "@/hooks/useRelease";
 import type { AppRelease } from "@/lib/release";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,18 @@ export default function ReleasePanel({
             ? "SHA-256 published in the release sheet"
             : "APK · no store account needed"}
         </span>
+
+        {release.mirror ? (
+          <>
+            <span aria-hidden="true" className="text-[0.68rem] text-fog-700">
+              ·
+            </span>
+            <span className="flex items-center gap-1.5 text-[0.68rem] text-fog-700">
+              Mirror on
+              <MirrorLink mirror={release.mirror} variant="inline" className="text-[0.68rem]" />
+            </span>
+          </>
+        ) : null}
       </div>
     </div>
   );
