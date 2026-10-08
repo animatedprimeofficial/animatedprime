@@ -3,23 +3,27 @@
 import { useMemo, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
-import { usePlayer } from "@/components/providers/PlayerProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import MagneticButton from "@/components/anim/MagneticButton";
 import Reveal from "@/components/anim/Reveal";
-import SceneArt from "@/components/art/SceneArt";
-import { HERO_MOVIE, TRENDING_MOVIES } from "@/lib/movies";
+import Artwork from "@/components/art/Artwork";
+import DownloadButton from "@/components/site/DownloadButton";
+import type { AppRelease } from "@/lib/release";
 import { cn } from "@/lib/utils";
 
-const COLLAGE = TRENDING_MOVIES.slice(1, 6);
-
-export default function CTASection() {
+export default function CTASection({ release }: { release: AppRelease }) {
   const rootRef = useRef<HTMLElement>(null);
   const { scrollTo } = useApp();
-  const { open } = usePlayer();
+  const { trending } = useCatalog();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
+
+  const collage = useMemo(
+    () => (trending.length > 1 ? trending.slice(1, 6) : trending).slice(0, 5),
+    [trending],
+  );
 
   const particles = useMemo(
     () =>
@@ -117,7 +121,7 @@ export default function CTASection() {
 
       {/* drifting poster collage */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden lg:block">
-        {COLLAGE.map((movie, index) => {
+        {collage.map((movie, index) => {
           const positions = [
             "left-[3%] top-[14%] w-[13rem] -rotate-6",
             "left-[14%] bottom-[8%] w-[11rem] rotate-3",
@@ -131,18 +135,17 @@ export default function CTASection() {
               data-cta-collage
               className={cn(
                 "absolute overflow-hidden rounded-[1.25rem] border border-white/10 opacity-25 shadow-[0_40px_100px_-40px_rgba(0,0,0,0.9)] blur-[2px]",
-                positions[index],
+                positions[index % positions.length],
               )}
             >
               <div className="aspect-[2/3] w-full">
-                <SceneArt
-                  scene={movie.scene}
-                  palette={movie.palette}
+                <Artwork
+                  movie={movie}
+                  variant="poster"
                   width={600}
                   height={900}
                   detail="simple"
-                  seed={`cta-${movie.id}`}
-                  className="h-full w-full object-cover"
+                  sizes="13rem"
                 />
               </div>
             </div>
@@ -153,7 +156,7 @@ export default function CTASection() {
       <div className="relative mx-auto flex w-full max-w-[104rem] flex-col items-center px-5 py-24 text-center sm:px-6 lg:px-10">
         <Reveal y={16} className="flex items-center gap-3">
           <span className="h-px w-8 bg-gradient-to-r from-transparent to-violet" aria-hidden="true" />
-          <span className="eyebrow text-fog-500">Chapter 07 — Start</span>
+          <span className="eyebrow text-fog-500">Chapter 09 — Start</span>
           <span className="h-px w-8 bg-gradient-to-l from-transparent to-cyan" aria-hidden="true" />
         </Reveal>
 
@@ -171,17 +174,7 @@ export default function CTASection() {
         </Reveal>
 
         <div className="mt-11 flex flex-col items-center gap-4 sm:flex-row">
-          <MagneticButton
-            variant="primary"
-            cursor="play"
-            size="lg"
-            onClick={() => open(HERO_MOVIE)}
-          >
-            Start Exploring
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-              <path d="M5 12h14m-5.5-5.5L19 12l-5.5 5.5" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </MagneticButton>
+          <DownloadButton release={release} variant="primary" size="lg" />
           <MagneticButton
             variant="outline"
             cursor="link"
@@ -194,7 +187,7 @@ export default function CTASection() {
 
         <Reveal y={18} delay={0.22}>
           <p className="mt-9 text-[0.68rem] font-semibold tracking-[0.24em] text-fog-700 uppercase">
-            30 days free · Cancel in two taps · Family profiles included
+            Free to browse · 30 days free in the app · Cancel in two taps
           </p>
         </Reveal>
       </div>

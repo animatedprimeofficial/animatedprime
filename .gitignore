@@ -50,3 +50,6 @@ yarn-error.log*
 # large media that should live in a release, not the repo
 /public/downloads/*.apk
 /public/downloads/*.aab
+
+# staging folder for signed Android builds — a release artifact, never a commit
+/apk/

@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
-import { createPosterCanvas } from "@/lib/posterTexture";
+import { usePosterTexture } from "@/hooks/usePosterTexture";
 import type { Movie } from "@/lib/movies";
 
 /**
@@ -30,23 +30,8 @@ function Poster({ movie, position, scale, tilt, phase, progress, lowPower }: Pos
   const frameRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
 
-  const texture = useMemo(() => {
-    const canvas = createPosterCanvas({
-      title: movie.title,
-      palette: movie.palette,
-      scene: movie.scene,
-      year: movie.year,
-      rating: movie.rating,
-      genre: movie.genre[0],
-    });
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
-    tex.needsUpdate = true;
-    return tex;
-  }, [movie]);
-
-  useEffect(() => () => texture.dispose(), [texture]);
+  // Real poster when the catalogue has one, generated key art otherwise.
+  const texture = usePosterTexture(movie);
 
   useFrame((state) => {
     const mesh = meshRef.current;

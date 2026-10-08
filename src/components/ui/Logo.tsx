@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 export interface LogoProps {
@@ -8,47 +9,26 @@ export interface LogoProps {
 }
 
 /**
- * The AnimatedPrime mark: a projector iris built from two offset rings around a
- * play prism. Rings counter-rotate on hover, so the identity itself animates.
+ * The AnimatedPrime mark. A single raster asset is the identity everywhere —
+ * navbar, footer, install dialog and the phone screens — so the brand can never
+ * drift between what the site promises and what the app ships.
  */
 export function LogoMark({ className, animated = true }: { className?: string; animated?: boolean }) {
   return (
-    <svg
-      viewBox="0 0 48 48"
-      className={cn("h-9 w-9", className)}
+    <Image
+      src="/logo.png"
+      alt=""
       aria-hidden="true"
-      focusable="false"
-    >
-      <defs>
-        <linearGradient id="ap-logo-a" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#7c5cff" />
-          <stop offset="52%" stopColor="#46e5ff" />
-          <stop offset="100%" stopColor="#ff5ca8" />
-        </linearGradient>
-        <linearGradient id="ap-logo-b" x1="0" y1="1" x2="1" y2="0">
-          <stop offset="0%" stopColor="#46e5ff" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#7c5cff" stopOpacity="0.2" />
-        </linearGradient>
-      </defs>
-      <circle cx="24" cy="24" r="21.5" fill="none" stroke="url(#ap-logo-b)" strokeWidth="1.2" />
-      <g className={animated ? "origin-center transition-transform duration-700 group-hover:rotate-180" : undefined}>
-        <circle
-          cx="24"
-          cy="24"
-          r="16"
-          fill="none"
-          stroke="url(#ap-logo-a)"
-          strokeWidth="2.2"
-          strokeDasharray="72 32"
-          strokeLinecap="round"
-        />
-      </g>
-      <g className={animated ? "origin-center transition-transform duration-700 group-hover:-rotate-90" : undefined}>
-        <circle cx="24" cy="7.5" r="2.6" fill="#46e5ff" />
-        <circle cx="40.5" cy="30" r="1.9" fill="#ff5ca8" />
-      </g>
-      <path d="M20.5 17.5 L31 24 L20.5 30.5 Z" fill="url(#ap-logo-a)" />
-    </svg>
+      width={466}
+      height={466}
+      draggable={false}
+      className={cn(
+        "h-9 w-9 shrink-0 select-none",
+        animated &&
+          "transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)] group-hover:-rotate-6 group-hover:scale-110",
+        className,
+      )}
+    />
   );
 }
 

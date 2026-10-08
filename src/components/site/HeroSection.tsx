@@ -4,13 +4,13 @@ import dynamic from "next/dynamic";
 import { useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { usePlayer } from "@/components/providers/PlayerProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import MagneticButton from "@/components/anim/MagneticButton";
-import SceneArt from "@/components/art/SceneArt";
+import Artwork from "@/components/art/Artwork";
 import { RatingBadge } from "@/components/ui/Pill";
-import { HERO_MOVIE } from "@/lib/movies";
 import { cn } from "@/lib/utils";
 
 const HeroAtmosphere = dynamic(() => import("@/components/three/HeroAtmosphere"), {
@@ -25,13 +25,54 @@ function PlayGlyph({ className }: { className?: string }) {
   );
 }
 
+/**
+ * Where every animated hero element sits before the entrance plays.
+ *
+ * Declared once so the pre-stage and the timeline cannot drift apart. Staging
+ * these the moment the client hydrates is what lets the entrance begin the
+ * instant the curtain lifts — without it the browser paints the finished hero
+ * for a frame, then snaps everything back to the start of the animation.
+ *
+ * The backdrop is deliberately absent: it stays lit behind the curtain so the
+ * reveal opens onto an already-lit room rather than a black frame.
+ */
+const HERO_OPENING = {
+  "[data-hero-atmos]": { opacity: 0 },
+  "[data-hero-pill]": { y: 18, opacity: 0 },
+  "[data-hero-frame]": {
+    clipPath: "inset(16% 14% 16% 14% round 2.6rem)",
+    scale: 1.09,
+    opacity: 0,
+  },
+  "[data-hero-sub]": { y: 24, opacity: 0 },
+  "[data-hero-feature]": { y: 36, opacity: 0 },
+  "[data-hero-chip]": { y: 28, opacity: 0, scale: 0.94 },
+  "[data-hero-cta]": { y: 22, opacity: 0 },
+  "[data-hero-cue]": { opacity: 0, y: 14 },
+} as const;
+
 export default function HeroSection() {
   const rootRef = useRef<HTMLElement>(null);
   const { introDone, scrollTo, ready } = useApp();
   const { open } = usePlayer();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
-  const movie = HERO_MOVIE;
+  const { hero: movie } = useCatalog();
+
+  /*
+   * Pre-stage. Runs on first paint, before the curtain lifts, so the hero is
+   * never seen in its finished state while the intro is still on screen. The
+   * entrance below then plays from exactly this pose.
+   */
+  useGSAP(
+    () => {
+      if (reducedMotion) return;
+      Object.entries(HERO_OPENING).forEach(([selector, state]) => {
+        gsap.set(selector, state);
+      });
+    },
+    { scope: rootRef, dependencies: [reducedMotion], revertOnUpdate: false },
+  );
 
   /* Entrance — waits for the intro curtain so the two never talk over each other. */
   useGSAP(
@@ -39,12 +80,7 @@ export default function HeroSection() {
       if (reducedMotion || !introDone) return;
       const tl = gsap.timeline({ defaults: { ease: EASE.cinema } });
 
-      tl.fromTo(
-        "[data-hero-bg]",
-        { opacity: 0, scale: 1.07 },
-        { opacity: 1, scale: 1, duration: 1.5 },
-        0,
-      )
+      tl.fromTo("[data-hero-bg]", { scale: 1.07 }, { scale: 1, duration: 1.5 }, 0)
         .fromTo(
           "[data-hero-atmos]",
           { opacity: 0 },
@@ -150,16 +186,16 @@ export default function HeroSection() {
           copy instead of stacking below it, so the first screen is the poster */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 -z-10 h-[62%] overflow-hidden lg:hidden">
         <div className="absolute inset-[-6%] scale-110">
-          <SceneArt
-            scene={movie.scene}
-            palette={movie.palette}
+          <Artwork
+            movie={movie}
+            variant="poster"
             width={900}
             height={1200}
             horizon={0.94}
             detail="simple"
             animate={!reducedMotion}
-            seed="hero-mobile-art"
-            className="h-full w-full object-cover"
+            priority
+            sizes="100vw"
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-ink-950/45 via-ink-950/10 to-ink-950" />
@@ -205,7 +241,8 @@ export default function HeroSection() {
               className="mt-5 max-w-xl text-base leading-relaxed text-fog-300/85 sm:text-[1.0625rem]"
             >
               Your next animated adventure starts here. A hand-curated universe of
-              hand-drawn and hand-built worlds — streaming in 4K HDR, on every screen you own.
+              animated films and anime — hand-drawn worlds streaming in 4K HDR, on
+              every screen you own.
             </p>
 
             {/* featured title */}
@@ -218,11 +255,17 @@ export default function HeroSection() {
                 <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
                 <RatingBadge value={movie.rating} className="px-2.5 py-0.5" />
                 <span>{movie.year}</span>
-                <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
-                <span>{movie.duration}</span>
-                <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem]">
-                  {movie.maturity}
-                </span>
+                {movie.duration ? (
+                  <>
+                    <span aria-hidden="true" className="h-1 w-1 rounded-full bg-fog-700" />
+                    <span>{movie.duration}</span>
+                  </>
+                ) : null}
+                {movie.maturity ? (
+                  <span className="rounded border border-white/12 px-1.5 py-0.5 text-[0.6rem]">
+                    {movie.maturity}
+                  </span>
+                ) : null}
               </div>
 
               <h2 className="display-md mt-3.5 text-fog-100">{movie.title}</h2>
@@ -245,7 +288,7 @@ export default function HeroSection() {
               <div className="mt-6 flex flex-wrap items-center gap-3">
                 <span data-hero-cta className="inline-flex">
                   <MagneticButton onClick={() => open(movie)} cursor="play" variant="primary">
-                    Watch Now
+                    Watch in the app
                     <PlayGlyph />
                   </MagneticButton>
                 </span>
@@ -282,15 +325,15 @@ export default function HeroSection() {
               className="relative aspect-[4/5] w-full overflow-hidden rounded-[2.6rem] border border-white/10 shadow-[0_60px_140px_-50px_rgba(0,0,0,0.95)] sm:aspect-[5/6]"
             >
               <div data-hero-art-inner className="absolute inset-0 scale-[1.02]">
-                <SceneArt
-                  scene={movie.scene}
-                  palette={movie.palette}
+                <Artwork
+                  movie={movie}
+                  variant="poster"
                   width={900}
                   height={1125}
                   detail="full"
                   animate
-                  seed="hero-key-art"
-                  className="h-full w-full object-cover"
+                  priority
+                  sizes="46vw"
                 />
               </div>
 
@@ -304,8 +347,8 @@ export default function HeroSection() {
               />
 
               <div className="absolute inset-x-5 top-5 flex items-center justify-between gap-3">
-                <span className="rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-fog-300 uppercase backdrop-blur-md">
-                  AnimatedPrime Original
+                <span className="max-w-[62%] truncate rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-fog-300 uppercase backdrop-blur-md">
+                  {movie.studio ?? "AnimatedPrime Select"}
                 </span>
                 <span className="rounded-full border border-white/15 bg-ink-950/45 px-3 py-1.5 text-[0.6rem] font-bold tracking-[0.2em] text-cyan uppercase backdrop-blur-md">
                   {movie.quality[0]}
@@ -314,19 +357,21 @@ export default function HeroSection() {
 
               <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-5 sm:p-6">
                 <div>
-                  <p className="eyebrow text-fog-500">This week&apos;s premiere</p>
+                  <p className="eyebrow text-fog-500">
+                    {movie.source === "tmdb" ? "In the spotlight" : "This week's premiere"}
+                  </p>
                   <p className="mt-2 font-display text-xl font-bold tracking-[-0.03em] text-fog-100 sm:text-2xl">
                     {movie.title}
                   </p>
                   <p className="mt-1 text-xs text-fog-500">
-                    {movie.genre.join(" · ")}
+                    {[movie.studio, movie.genre.join(" · ")].filter(Boolean).join(" · ")}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => open(movie)}
                   data-cursor="play"
-                  aria-label={`Play ${movie.title}`}
+                  aria-label={`Watch ${movie.title} in the AnimatedPrime app`}
                   className="group grid h-14 w-14 shrink-0 place-items-center rounded-full border border-white/25 bg-white/12 text-fog-100 backdrop-blur-md transition-all duration-500 hover:scale-105 hover:bg-white/20"
                 >
                   <span className="absolute h-14 w-14 animate-pulse-ring rounded-full border border-cyan/40" aria-hidden="true" />
@@ -358,8 +403,11 @@ export default function HeroSection() {
               <span>
                 <span className="block text-[0.6rem] font-semibold tracking-[0.2em] text-fog-500 uppercase">
                   Critic score
-                </span>
-                <span className="block text-xs text-fog-300">12.4k reviews</span>
+                </span>                  <span className="block text-xs text-fog-300">
+                    {movie.votes
+                      ? `${movie.votes.toLocaleString("en-US")} reviews`
+                      : "Audience favourite"}
+                  </span>
               </span>
             </div>
           </div>

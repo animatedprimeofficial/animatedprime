@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
+import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useReducedMotion } from "@/hooks/useMediaQuery";
 import Logo from "@/components/ui/Logo";
 import Reveal from "@/components/anim/Reveal";
@@ -10,7 +11,9 @@ import Reveal from "@/components/anim/Reveal";
 const NAV = [
   { label: "Home", href: "#top" },
   { label: "Movies", href: "#featured" },
+  { label: "Anime", href: "#anime" },
   { label: "Genres", href: "#genres" },
+  { label: "The app", href: "#app" },
   { label: "About", href: "#experience" },
   { label: "Contact", href: "#start" },
 ];
@@ -39,6 +42,7 @@ const SOCIALS: { label: string; path: string }[] = [
 export default function Footer() {
   const rootRef = useRef<HTMLElement>(null);
   const { scrollTo } = useApp();
+  const { source, attribution } = useCatalog();
   const reducedMotion = useReducedMotion();
 
   useGSAP(
@@ -82,8 +86,8 @@ export default function Footer() {
           <Reveal y={22} className="flex flex-col gap-5">
             <Logo />
             <p className="max-w-xs text-sm leading-relaxed text-fog-500">
-              A premium home for animated movies. Curated worlds, honest recommendations
-              and playback that never gets in the way of the story.
+              A premium home for animated films and anime. Curated worlds, honest
+              recommendations and playback that never gets in the way of the story.
             </p>
             <p className="story-italic text-lg text-fog-300">Animation. Reimagined.</p>
           </Reveal>
@@ -151,10 +155,22 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col items-start justify-between gap-4 border-t border-white/8 pt-6 sm:flex-row sm:items-center">
-          <p className="text-[0.7rem] tracking-wide text-fog-700">
-            © {new Date().getFullYear()} AnimatedPrime. A fictional platform built as a
-            front-end showcase.
-          </p>
+          <div className="flex flex-col gap-1.5">
+            <p className="text-[0.7rem] tracking-wide text-fog-700">
+              © {new Date().getFullYear()} AnimatedPrime. A fictional platform built as a
+              front-end showcase.
+            </p>
+            {attribution ? (
+              <p className="text-[0.68rem] tracking-wide text-fog-700">
+                Titles and artwork supplied by the TMDB API. {attribution}
+              </p>
+            ) : (
+              <p className="text-[0.68rem] tracking-wide text-fog-700">
+                {source === "local" ? "Offline catalogue" : "Live catalogue"} — connect a
+                TMDB key to stream real metadata and official posters.
+              </p>
+            )}
+          </div>
           <div className="flex items-center gap-6">
             <p className="text-[0.62rem] font-semibold tracking-[0.26em] text-fog-700 uppercase">
               Made for animation lovers

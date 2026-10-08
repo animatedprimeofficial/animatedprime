@@ -24,6 +24,7 @@ import CustomCursor from "@/components/site/CustomCursor";
 import SectionRail from "@/components/site/SectionRail";
 import IntroCurtain from "@/components/site/IntroCurtain";
 import PlayerOverlay from "@/components/site/PlayerOverlay";
+import type { AppRelease } from "@/lib/release";
 
 type IntroStage = "boot" | "playing" | "done";
 
@@ -63,7 +64,13 @@ const useIsoLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : use
  * curtain. Also owns scroll smoothing and exposes a single `scrollTo` so every
  * CTA in the app is smooth-scroll-aware.
  */
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({
+  children,
+  release,
+}: {
+  children: ReactNode;
+  release: AppRelease;
+}) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const smootherRef = useRef<ScrollSmootherInstance | null>(null);
@@ -187,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <Navbar />
+      <Navbar release={release} />
 
       <div id="smooth-wrapper" ref={wrapperRef}>
         <div id="smooth-content" ref={contentRef}>
@@ -197,7 +204,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       <SectionRail />
       <CustomCursor />
-      <PlayerOverlay />
+      <PlayerOverlay release={release} />
       <IntroCurtain stage={stage} onDone={completeIntro} reducedMotion={reducedMotion} />
     </AppContext.Provider>
   );

@@ -15,7 +15,8 @@ export type PaletteId =
   | "candy-sky"
   | "neon-grid"
   | "midnight-aurora"
-  | "sunfield";
+  | "sunfield"
+  | "rose-neon";
 
 export interface Palette {
   /** sky gradient, dark → light */
@@ -95,6 +96,14 @@ export const PALETTES: Record<PaletteId, Palette> = {
     accent: "#ff5ca8",
     accent2: "#ffa24c",
     ink: "#140c05",
+    tint: "warm",
+  },
+  "rose-neon": {
+    sky: ["#0b0413", "#420f3a", "#ff4d7a"],
+    glow: "#ffd9e6",
+    accent: "#ff5ca8",
+    accent2: "#46e5ff",
+    ink: "#07020c",
     tint: "warm",
   },
 };

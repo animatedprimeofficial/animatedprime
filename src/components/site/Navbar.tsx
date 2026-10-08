@@ -6,16 +6,30 @@ import { useApp } from "@/components/providers/AppProvider";
 import { useWatchlist } from "@/components/providers/WatchlistProvider";
 import { useActiveSection } from "@/hooks/useActiveSection";
 import Logo from "@/components/ui/Logo";
+import DownloadButton from "@/components/site/DownloadButton";
+import type { AppRelease } from "@/lib/release";
 import { cn } from "@/lib/utils";
 
 const LINKS = [
   { label: "Home", href: "#top" },
   { label: "Movies", href: "#featured" },
-  { label: "Genres", href: "#genres" },
   { label: "Trending", href: "#trending" },
+  { label: "Anime", href: "#anime" },
+  { label: "Genres", href: "#genres" },
+  { label: "App", href: "#app" },
 ];
 
-const SECTION_IDS = ["top", "featured", "trending", "genres", "explore", "experience"];
+const SECTION_IDS = [
+  "top",
+  "featured",
+  "trending",
+  "anime",
+  "genres",
+  "immersive",
+  "experience",
+  "app",
+  "explore",
+];
 
 function IconSearch() {
   return (
@@ -38,7 +52,7 @@ function IconBookmark({ filled }: { filled?: boolean }) {
  * Floating nav. Scroll state is written straight to the DOM (no React state per
  * frame), so the header never re-renders while the page moves.
  */
-export default function Navbar() {
+export default function Navbar({ release }: { release: AppRelease }) {
   const headerRef = useRef<HTMLElement>(null);
   const pillRef = useRef<HTMLDivElement>(null);
   const progressRef = useRef<HTMLSpanElement>(null);
@@ -201,6 +215,23 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-1.5">
+            <DownloadButton
+              release={release}
+              variant="outline"
+              size="md"
+              label="Get the app"
+              /* `max-lg:hidden` rather than `hidden lg:inline-flex`: Tailwind emits
+                 `.inline-flex` *after* `.hidden`, so pairing them on one element
+                 leaves the CTA visible on phones — where it overflows the pill and
+                 pushes the menu button off screen. Keep the size overrides as v4
+                 important suffixes (`px-5!`), which the v3-style `!px-5` never
+                 generated. */
+              className="mr-1 max-lg:hidden px-5! py-2.5! text-[0.8rem]!"
+              /* the badge is a luxury, not a fixture — at lg the pill has no room
+                 for it and the profile avatar starts clipping */
+              badgeClassName="max-xl:hidden"
+            />
+
             <button
               type="button"
               onClick={focusSearch}
@@ -303,16 +334,23 @@ export default function Navbar() {
             )}
           </nav>
 
-          <div className="relative px-7">
+          <div className="relative flex flex-col gap-3 px-7">
+            <DownloadButton
+              release={release}
+              variant="primary"
+              size="md"
+              label="Get the mobile app"
+              className="w-full"
+            />
             <button
               type="button"
               data-menu-item
               onClick={() => go("#explore")}
-              className="w-full rounded-full bg-gradient-to-r from-violet to-cyan px-6 py-4 text-sm font-bold text-ink-950"
+              className="w-full rounded-full border border-white/16 bg-white/[0.04] px-6 py-4 text-sm font-semibold text-fog-100"
             >
               Watch Now
             </button>
-            <p className="mt-5 text-xs tracking-[0.2em] text-fog-700 uppercase">
+            <p className="mt-2 text-xs tracking-[0.2em] text-fog-700 uppercase">
               Animation. Reimagined.
             </p>
           </div>
