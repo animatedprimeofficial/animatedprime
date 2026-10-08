@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "6.0.0",
   "channel": "stable",
   "minAndroid": "Android 6.0 (API 23)",
   "targetAndroid": "Android 16 (API 36)",
