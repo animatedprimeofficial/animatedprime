@@ -195,6 +195,12 @@
   }
 }
 
+@keyframes ap-shimmer {
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
 @keyframes pulse-ring {
   0% {
     transform: scale(0.85);
@@ -337,6 +343,34 @@
       #000 95%,
       transparent
     );
+  }
+
+  /* Loading skeleton for official artwork.
+     The base paint is a static gradient and the sweep is a separate layer, so
+     when reduced motion switches animations off the tile still reads as
+     artwork-arriving rather than a grey hole. */
+  .shimmer {
+    background: linear-gradient(
+      140deg,
+      var(--color-ink-800),
+      var(--color-ink-850) 55%,
+      var(--color-ink-700)
+    );
+  }
+  .shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      100deg,
+      transparent 18%,
+      rgb(255 255 255 / 0.06) 42%,
+      rgb(124 92 255 / 0.16) 52%,
+      rgb(70 229 255 / 0.09) 60%,
+      transparent 82%
+    );
+    transform: translate3d(-100%, 0, 0);
+    animation: ap-shimmer 1.5s var(--ease-swift) infinite;
   }
 
   .display-xl {

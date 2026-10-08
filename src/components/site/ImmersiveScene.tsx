@@ -6,6 +6,7 @@ import { gsap, ScrollTrigger, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useCatalog } from "@/components/providers/CatalogProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
+import { useInView } from "@/hooks/useInView";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import Reveal from "@/components/anim/Reveal";
 import Artwork from "@/components/art/Artwork";
@@ -43,6 +44,12 @@ export default function ImmersiveScene() {
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
   const pinned = ready && isDesktop && !reducedMotion;
+  /*
+   * The corridor is a WebGL context, twelve textures and a dust field. None of
+   * it is needed until the reader is a screen away from the section, so it is
+   * built then rather than during the hero's first paint.
+   */
+  const [stageRef, stageReady] = useInView<HTMLDivElement>("900px");
 
   useGSAP(
     () => {
@@ -125,7 +132,10 @@ export default function ImmersiveScene() {
             rearranges around you.
           </p>
 
-          <div className="relative mt-10 h-[58svh] overflow-hidden rounded-[2rem] border border-white/10 bg-ink-900">
+          <div
+            ref={stageRef}
+            className="relative mt-10 h-[58svh] overflow-hidden rounded-[2rem] border border-white/10 bg-ink-900"
+          >
             {reducedMotion ? (
               <div className="grid h-full grid-cols-3 gap-3 p-4">
                 {trending.slice(0, 3).map((movie) => (
@@ -141,9 +151,9 @@ export default function ImmersiveScene() {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : stageReady ? (
               <ImmersiveCanvas movies={movies} progress={progressRef} lowPower idle />
-            )}
+            ) : null}
           </div>
 
           <div className="mt-12 grid gap-8 sm:grid-cols-3">
@@ -171,8 +181,8 @@ export default function ImmersiveScene() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(124,92,255,0.22),transparent_60%)]"
         />
 
-        <div data-immersive-frame className="absolute inset-0">
-          <ImmersiveCanvas movies={movies} progress={progressRef} />
+        <div ref={stageRef} data-immersive-frame className="absolute inset-0">
+          {stageReady ? <ImmersiveCanvas movies={movies} progress={progressRef} /> : null}
         </div>
 
         <div

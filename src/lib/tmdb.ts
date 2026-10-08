@@ -240,7 +240,12 @@ export function mapTmdbMovie(result: TmdbResult): Movie | null {
     description: result.overview?.trim() || "No synopsis has been published for this title yet.",
     poster: `tmdb://${result.id}/poster`,
     backdrop: `tmdb://${result.id}/backdrop`,
-    posterUrl: tmdbImage(result.poster_path, "w500"),
+    // w780 rather than w500: the hero key art is displayed wider than 500 CSS
+    // px (and wider still on a retina display), so a w500 master was being
+    // upscaled and read soft on the most important image on the site. The
+    // optimiser still serves a per-slot variant to the browser, so smaller
+    // cards cost the same bytes as before.
+    posterUrl: tmdbImage(result.poster_path, "w780"),
     backdropUrl: tmdbImage(result.backdrop_path, "w1280"),
     genre,
     rating,
