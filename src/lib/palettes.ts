@@ -1,11 +1,12 @@
 /**
  * Art direction palettes.
  *
- * AnimatedPrime ships its artwork procedurally (see `components/art/SceneArt.tsx`)
- * so the landing page is fully self-contained, crisp at any resolution and
+ * Official artwork is what the site paints when the catalogue has it, but every
+ * title also carries a procedural scene (see `components/art/SceneArt.tsx`) so
+ * the landing page is fully self-contained, crisp at any resolution and
  * completely original. Palettes here are the single source of truth for a
- * title's colour identity — the same palette drives the DOM artwork AND the
- * WebGL poster textures, so a movie looks like itself everywhere.
+ * title's colour identity — the same palette drives the procedural key art and
+ * the WebGL poster textures, so a movie looks like itself everywhere.
  */
 export type PaletteId =
   | "violet-dusk"

@@ -35,7 +35,14 @@ function PlayGlyph({ className }: { className?: string }) {
  *
  * The backdrop is deliberately absent: it stays lit behind the curtain so the
  * reveal opens onto an already-lit room rather than a black frame.
+ *
+ * Both key-art placements share one `sizes` string, so on any given viewport
+ * they resolve to the same optimised candidate and the browser fetches the
+ * hero poster once. Two different strings meant a second full-size preload for
+ * an image that is hidden at that breakpoint.
  */
+const HERO_ART_SIZES = "(min-width: 1024px) 46vw, 100vw";
+
 const HERO_OPENING = {
   "[data-hero-atmos]": { opacity: 0 },
   "[data-hero-pill]": { y: 18, opacity: 0 },
@@ -195,7 +202,7 @@ export default function HeroSection() {
             detail="simple"
             animate={!reducedMotion}
             priority
-            sizes="100vw"
+            sizes={HERO_ART_SIZES}
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-b from-ink-950/45 via-ink-950/10 to-ink-950" />
@@ -333,7 +340,7 @@ export default function HeroSection() {
                   detail="full"
                   animate
                   priority
-                  sizes="46vw"
+                  sizes={HERO_ART_SIZES}
                 />
               </div>
 

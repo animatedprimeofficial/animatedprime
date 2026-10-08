@@ -9,11 +9,20 @@ import { WatchlistProvider } from "@/components/providers/WatchlistProvider";
 import { getCatalog } from "@/lib/catalog";
 import { getRelease } from "@/lib/release";
 
+/**
+ * Only the two weights the design actually renders.
+ *
+ * Outfit is the display face and every element that uses it sets its own
+ * weight — headings through the `h1–h4` rule, everything else through an
+ * explicit utility. Nothing resolves to 400, 500, 600 or 900, so declaring
+ * those cuts only added @font-face rules the browser had to evaluate and
+ * silently substitute for.
+ */
 const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-outfit",
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["700", "800"],
 });
 
 const inter = Inter({
@@ -22,12 +31,18 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+/**
+ * Italic only — the way the storybook contrast is actually used (`.story-italic`
+ * is the sole consumer, including the hero's "Reimagined."). Declaring `normal`
+ * as well made Next preload a face that no element ever selects, which cost a
+ * font file on the critical path and told the browser to fetch it early.
+ */
 const instrument = Instrument_Serif({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-instrument",
   weight: "400",
-  style: ["normal", "italic"],
+  style: "italic",
 });
 
 export const metadata: Metadata = {

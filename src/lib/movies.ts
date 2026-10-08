@@ -4,9 +4,10 @@ import type { PaletteId, SceneId } from "./palettes";
  * A title as the UI understands it.
  *
  * `posterUrl` / `backdropUrl` carry official artwork when live metadata is
- * available (TMDB). When they are absent — no API key, offline build, an image
- * that fails to load — `<Artwork />` falls back to the procedurally generated
- * key art described by `scene` + `palette`, so a title is never a blank box.
+ * available (TMDB) and are what `<Artwork />` paints. When they are absent — no
+ * API key, an offline build, a catalogue that ships without images — a title's
+ * `scene` + `palette` describe the procedurally generated key art that becomes
+ * its artwork, so a title is never a blank box.
  */
 export interface Movie {
   id: string;
