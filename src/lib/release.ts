@@ -37,7 +37,7 @@ export interface AppRelease {
 const DOWNLOAD_DIR = path.join(process.cwd(), "public", "downloads");
 
 const DEFAULTS = {
-  version: process.env.ANDROID_APK_VERSION ?? "1.0.0",
+  version: process.env.ANDROID_APK_VERSION ?? "6.0.0",
   channel: (process.env.ANDROID_APK_CHANNEL as "stable" | "beta" | undefined) ?? "stable",
   minAndroid: process.env.ANDROID_MIN_ANDROID ?? "Android 6.0 (API 23)",
   targetAndroid: process.env.ANDROID_TARGET_ANDROID ?? "Android 16 (API 36)",
