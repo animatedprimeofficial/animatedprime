@@ -288,7 +288,7 @@ export default function ApkDownloadDialog({
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full bg-violet/25 blur-[90px]"
+          className="aura aura-violet-25 pointer-events-none absolute -top-24 left-1/2 h-48 w-[28rem] -translate-x-1/2 rounded-full"
         />
 
         <div className="relative flex items-start justify-between gap-5">

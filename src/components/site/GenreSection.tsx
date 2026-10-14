@@ -112,7 +112,7 @@ export default function GenreSection() {
     <section id="genres" ref={rootRef} className="relative py-24 sm:py-28 lg:py-32">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/3 top-0 h-[30rem] w-[30rem] rounded-full bg-violet/12 blur-[150px]"
+        className="aura aura-violet-12 pointer-events-none absolute left-1/3 top-0 h-[30rem] w-[30rem] rounded-full"
       />
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">

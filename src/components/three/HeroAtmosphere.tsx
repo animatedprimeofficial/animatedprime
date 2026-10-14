@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { FrameBudget } from "@/components/three/FrameBudget";
+import type { WebglMode } from "@/lib/perf";
 
 /**
  * Hero atmosphere: depth dust, soft bokeh and a slowly turning wire form.
@@ -155,13 +157,27 @@ function CameraRig({ enabled }: { enabled: boolean }) {
 }
 
 export interface HeroAtmosphereProps {
-  lowPower?: boolean;
+  /** `static` renders one frame and stops — identical composition, no GPU load */
+  mode?: WebglMode;
+  dpr?: number;
+  density?: number;
+  fps?: number;
 }
 
-export default function HeroAtmosphere({ lowPower = false }: HeroAtmosphereProps) {
+export default function HeroAtmosphere({
+  mode = "live",
+  dpr = 1.7,
+  density = 1,
+  fps = 60,
+}: HeroAtmosphereProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const texture = useGlowTexture();
+  /* Below this the bokeh, the wire form and the pointer rig buy too little for
+     what they cost, and the dust thins out to match. */
+  const lean = density < 0.75;
+  const moving = mode === "live";
+  const capped = moving && fps < 60;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -176,18 +192,24 @@ export default function HeroAtmosphere({ lowPower = false }: HeroAtmosphereProps
 
   const dustColors = useMemo(() => ["#ffffff", "#a894ff", "#46e5ff", "#ff5ca8"], []);
 
+  if (mode === "off") return null;
+
   return (
     <div ref={hostRef} className="absolute inset-0">
       <Canvas
-        dpr={[1, lowPower ? 1.35 : 1.7]}
-        frameloop={inView ? "always" : "never"}
+        dpr={[1, dpr]}
+        /* Demand-driven in three of the four cases: one frame for a static
+           atmosphere, a capped 24 fps for a weak device, nothing at all while
+           the hero is scrolled away. */
+        frameloop={moving ? (inView ? (capped ? "demand" : "always") : "never") : "demand"}
         camera={{ position: [0, 0, 6], fov: 42 }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         style={{ pointerEvents: "none" }}
       >
-        <CameraRig enabled={!lowPower} />
+        {capped && inView ? <FrameBudget fps={fps} /> : null}
+        <CameraRig enabled={!lean && moving} />
         <PointCloud
-          count={lowPower ? 320 : 900}
+          count={Math.round(900 * density)}
           spread={[16, 10, 12]}
           size={0.055}
           speed={1}
@@ -196,7 +218,7 @@ export default function HeroAtmosphere({ lowPower = false }: HeroAtmosphereProps
           texture={texture}
         />
         <PointCloud
-          count={lowPower ? 90 : 240}
+          count={Math.round(240 * density)}
           spread={[20, 12, 14]}
           size={0.24}
           speed={-0.6}
@@ -204,7 +226,7 @@ export default function HeroAtmosphere({ lowPower = false }: HeroAtmosphereProps
           opacity={0.35}
           texture={texture}
         />
-        {lowPower ? null : (
+        {lean ? null : (
           <>
             <Bokeh position={[-4.6, -1.4, -3]} scale={7} color="#7c5cff" texture={texture} opacity={0.5} />
             <Bokeh position={[4.2, 2.2, -4]} scale={6} color="#46e5ff" texture={texture} opacity={0.38} />

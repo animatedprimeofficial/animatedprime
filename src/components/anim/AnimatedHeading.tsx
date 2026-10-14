@@ -4,6 +4,7 @@ import { Fragment, createElement, useRef, type ElementType } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useReducedMotion } from "@/hooks/useMediaQuery";
 import { useApp } from "@/components/providers/AppProvider";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { cn } from "@/lib/utils";
 
 /**
@@ -64,6 +65,7 @@ export default function AnimatedHeading({
   const rootRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   const { ready } = useApp();
+  const { glass } = usePerf();
   const tokens = tokenize(text);
   const plain = ariaLabel ?? text.replace(/\*/g, "");
 
@@ -74,12 +76,18 @@ export default function AnimatedHeading({
       const words = root.querySelectorAll<HTMLElement>("[data-word]");
       if (!words.length) return;
 
-      const from = { yPercent, opacity: 0, rotate: 2.5, filter: "blur(8px)" };
+      /*
+       * The projector-focus blur is lovely and expensive: a filter on every
+       * word means every word is rasterised twice per frame for the length of
+       * the reveal. On a lite device the words still rise out of their masks —
+       * the blur is the only part that goes.
+       */
+      const from = { yPercent, opacity: 0, rotate: 2.5, ...(glass ? { filter: "blur(8px)" } : {}) };
       const to = {
         yPercent: 0,
         opacity: 1,
         rotate: 0,
-        filter: "blur(0px)",
+        ...(glass ? { filter: "blur(0px)" } : {}),
         duration: 1.15,
         ease: EASE.cinema,
         stagger,
@@ -107,7 +115,11 @@ export default function AnimatedHeading({
         scrollTrigger: { trigger: root, start, once: true },
       });
     },
-    { scope: rootRef, dependencies: [ready, mode, active, reducedMotion, text], revertOnUpdate: true },
+    {
+      scope: rootRef,
+      dependencies: [ready, mode, active, reducedMotion, text, glass],
+      revertOnUpdate: true,
+    },
   );
 
   return createElement(

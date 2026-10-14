@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { gsap, ScrollTrigger, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useCatalog } from "@/components/providers/CatalogProvider";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import { useInView } from "@/hooks/useInView";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
@@ -43,6 +44,7 @@ export default function ImmersiveScene() {
   const { movies, trending } = useCatalog();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
+  const perf = usePerf();
   const pinned = ready && isDesktop && !reducedMotion;
   /*
    * The corridor is a WebGL context, twelve textures and a dust field. None of
@@ -115,7 +117,7 @@ export default function ImmersiveScene() {
       <section id="immersive" ref={rootRef} className="relative overflow-hidden py-24 sm:py-28">
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute left-1/2 top-1/4 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full bg-violet/14 blur-[150px]"
+          className="aura aura-violet-14 pointer-events-none absolute left-1/2 top-1/4 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full"
         />
         <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">
           <Reveal className="flex items-center gap-3" y={14}>
@@ -152,7 +154,15 @@ export default function ImmersiveScene() {
                 ))}
               </div>
             ) : stageReady ? (
-              <ImmersiveCanvas movies={movies} progress={progressRef} lowPower idle />
+              <ImmersiveCanvas
+                movies={movies}
+                progress={progressRef}
+                mode={perf.webgl === "off" ? "off" : "live"}
+                dpr={perf.dpr}
+                density={perf.density}
+                fps={perf.fps}
+                idle
+              />
             ) : null}
           </div>
 
@@ -182,7 +192,16 @@ export default function ImmersiveScene() {
         />
 
         <div ref={stageRef} data-immersive-frame className="absolute inset-0">
-          {stageReady ? <ImmersiveCanvas movies={movies} progress={progressRef} /> : null}
+          {stageReady ? (
+            <ImmersiveCanvas
+              movies={movies}
+              progress={progressRef}
+              mode={perf.webgl === "off" ? "off" : "live"}
+              dpr={perf.dpr}
+              density={perf.density}
+              fps={perf.fps}
+            />
+          ) : null}
         </div>
 
         <div

@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useCatalog } from "@/components/providers/CatalogProvider";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { usePointerFine, useReducedMotion } from "@/hooks/useMediaQuery";
 import PhoneMockup from "@/components/site/PhoneMockup";
 
@@ -18,6 +19,7 @@ export default function PhoneStage() {
   const reducedMotion = useReducedMotion();
   const pointerFine = usePointerFine();
   const { ready } = useApp();
+  const { ambient } = usePerf();
 
   const rail = (trending.length ? trending : movies).filter((movie) => movie.id !== hero.id);
   const railMovies = rail.length >= 3 ? rail : [...rail, ...movies].slice(0, 4);
@@ -53,17 +55,6 @@ export default function PhoneStage() {
           scrollTrigger: { trigger: rootRef.current, start: "top 74%", once: true },
         },
       );
-
-      gsap.utils.toArray<HTMLElement>("[data-phone]").forEach((phone, index) => {
-        gsap.to(phone, {
-          y: index % 2 === 0 ? -16 : 14,
-          duration: 6 + index * 1.2,
-          ease: "sine.inOut",
-          repeat: -1,
-          yoyo: true,
-          delay: index * 0.5,
-        });
-      });
 
       if (!pointerFine) return;
       const stage = rootRef.current;
@@ -101,15 +92,38 @@ export default function PhoneStage() {
     { scope: rootRef, dependencies: [ready, reducedMotion, pointerFine, hero.id], revertOnUpdate: true },
   );
 
+  /*
+   * The phones breathe — three infinitely repeating tweens that never stop for
+   * the life of the page. Separated from the entrance and the pointer rig so
+   * that dropping them for a weak device cannot replay the fan-in.
+   */
+  useGSAP(
+    () => {
+      if (reducedMotion || !ambient) return;
+
+      gsap.utils.toArray<HTMLElement>("[data-phone]").forEach((phone, index) => {
+        gsap.to(phone, {
+          y: index % 2 === 0 ? -16 : 14,
+          duration: 6 + index * 1.2,
+          ease: "sine.inOut",
+          repeat: -1,
+          yoyo: true,
+          delay: index * 0.5,
+        });
+      });
+    },
+    { scope: rootRef, dependencies: [reducedMotion, ambient], revertOnUpdate: true },
+  );
+
   return (
     <div ref={rootRef} className="relative">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-1/4 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-violet/25 blur-[120px]"
+        className="aura aura-violet-25 pointer-events-none absolute left-1/2 top-1/4 h-[26rem] w-[26rem] -translate-x-1/2 rounded-full"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-0 right-4 h-[20rem] w-[20rem] rounded-full bg-cyan/15 blur-[110px]"
+        className="aura aura-cyan-15 pointer-events-none absolute bottom-0 right-4 h-[20rem] w-[20rem] rounded-full"
       />
 
       <div className="relative flex items-end justify-center gap-3 [perspective:1800px] sm:gap-4">

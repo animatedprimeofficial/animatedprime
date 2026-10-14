@@ -4,6 +4,7 @@ import { useMemo, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useCatalog } from "@/components/providers/CatalogProvider";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import MagneticButton from "@/components/anim/MagneticButton";
@@ -19,27 +20,33 @@ export default function CTASection({ release }: { release: AppRelease }) {
   const { trending } = useCatalog();
   const reducedMotion = useReducedMotion();
   const isDesktop = useIsDesktop();
+  const perf = usePerf();
 
   const collage = useMemo(
     () => (trending.length > 1 ? trending.slice(1, 6) : trending).slice(0, 5),
     [trending],
   );
 
-  const particles = useMemo(
-    () =>
-      Array.from({ length: isDesktop ? 26 : 12 }, (_, index) => ({
-        id: index,
-        left: `${(index * 37) % 100}%`,
-        top: `${(index * 53) % 100}%`,
-        size: 1 + ((index * 7) % 3),
-        delay: (index % 9) * 0.4,
-      })),
-    [isDesktop],
-  );
+  const particles = useMemo(() => {
+    const base = isDesktop ? 26 : 12;
+    return Array.from({ length: Math.max(6, Math.round(base * perf.density)) }, (_, index) => ({
+      id: index,
+      left: `${(index * 37) % 100}%`,
+      top: `${(index * 53) % 100}%`,
+      size: 1 + ((index * 7) % 3),
+      delay: (index % 9) * 0.4,
+    }));
+  }, [isDesktop, perf.density]);
 
+  /*
+   * Every animation in this section repeats forever: three auroras, one tween
+   * per mote of light and one per collage card. Together they are the heaviest
+   * permanent load on the page, so they are all-or-nothing against the ambient
+   * budget rather than scaled down.
+   */
   useGSAP(
     () => {
-      if (reducedMotion) return;
+      if (reducedMotion || !perf.ambient) return;
 
       gsap.to("[data-cta-aurora]", {
         xPercent: 8,
@@ -78,7 +85,7 @@ export default function CTASection({ release }: { release: AppRelease }) {
 
       return;
     },
-    { scope: rootRef, dependencies: [reducedMotion], revertOnUpdate: true },
+    { scope: rootRef, dependencies: [reducedMotion, perf.ambient], revertOnUpdate: true },
   );
 
   return (
@@ -92,15 +99,15 @@ export default function CTASection({ release }: { release: AppRelease }) {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(124,92,255,0.35),transparent_62%)]" />
         <div
           data-cta-aurora
-          className="absolute -top-1/3 left-[-10%] h-[46rem] w-[80%] rounded-full bg-gradient-to-r from-violet/35 via-rose/20 to-transparent blur-[120px]"
+          className="aura aura-violet-rose absolute -top-1/3 left-[-10%] h-[46rem] w-[80%] rounded-full"
         />
         <div
           data-cta-aurora
-          className="absolute -bottom-1/4 right-[-15%] h-[40rem] w-[70%] rounded-full bg-gradient-to-l from-cyan/28 via-mint/12 to-transparent blur-[130px]"
+          className="aura aura-cyan-mint absolute -bottom-1/4 right-[-15%] h-[40rem] w-[70%] rounded-full"
         />
         <div
           data-cta-aurora
-          className="absolute left-1/3 top-1/4 h-[30rem] w-[30rem] rounded-full bg-amber/12 blur-[140px]"
+          className="aura aura-amber-12 absolute left-1/3 top-1/4 h-[30rem] w-[30rem] rounded-full"
         />
 
         {particles.map((particle) => (
