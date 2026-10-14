@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
+import { FrameBudget } from "@/components/three/FrameBudget";
 import { usePosterTexture } from "@/hooks/usePosterTexture";
 import type { Movie } from "@/lib/movies";
+import type { WebglMode } from "@/lib/perf";
 
 /**
  * "Entering an animated world".
@@ -22,10 +24,10 @@ interface PosterProps {
   tilt: number;
   phase: number;
   progress: RefObject<number>;
-  lowPower: boolean;
+  lean: boolean;
 }
 
-function Poster({ movie, position, scale, tilt, phase, progress, lowPower }: PosterProps) {
+function Poster({ movie, position, scale, tilt, phase, progress, lean }: PosterProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const frameRef = useRef<THREE.Mesh>(null);
   const { camera } = useThree();
@@ -39,8 +41,8 @@ function Poster({ movie, position, scale, tilt, phase, progress, lowPower }: Pos
     const t = state.clock.elapsedTime;
     const depth = progress.current ?? 0;
 
-    mesh.position.y = position[1] + Math.sin(t * 0.4 + phase) * (lowPower ? 0.12 : 0.26);
-    mesh.position.x = position[0] + Math.cos(t * 0.28 + phase) * (lowPower ? 0.1 : 0.22);
+    mesh.position.y = position[1] + Math.sin(t * 0.4 + phase) * (lean ? 0.12 : 0.26);
+    mesh.position.x = position[0] + Math.cos(t * 0.28 + phase) * (lean ? 0.1 : 0.22);
     mesh.position.z = position[2] + depth * 6;
 
     // billboard with a touch of authored lean so the corridor reads as 3D
@@ -54,7 +56,7 @@ function Poster({ movie, position, scale, tilt, phase, progress, lowPower }: Pos
       frameRef.current.position.z -= 0.03;
     }
 
-    if (!lowPower) mesh.lookAt(camera.position.x * 0.2, camera.position.y * 0.2, camera.position.z);
+    if (!lean) mesh.lookAt(camera.position.x * 0.2, camera.position.y * 0.2, camera.position.z);
   });
 
   return (
@@ -110,14 +112,14 @@ function Dust({ count, progress }: { count: number; progress: RefObject<number> 
   );
 }
 
-function Rig({ progress, lowPower }: { progress: RefObject<number>; lowPower: boolean }) {
+function Rig({ progress, lean }: { progress: RefObject<number>; lean: boolean }) {
   const { camera, pointer } = useThree();
   const target = useRef(new THREE.Vector3(0, 0, 8));
 
   useFrame(() => {
     const depth = progress.current ?? 0;
-    const sway = lowPower ? 0 : pointer.x * 1.1;
-    const rise = lowPower ? 0 : pointer.y * 0.7;
+    const sway = lean ? 0 : pointer.x * 1.1;
+    const rise = lean ? 0 : pointer.y * 0.7;
     target.current.set(
       sway + Math.sin(depth * Math.PI * 1.4) * 1.5,
       rise + Math.cos(depth * Math.PI) * 0.6,
@@ -134,19 +136,29 @@ function Rig({ progress, lowPower }: { progress: RefObject<number>; lowPower: bo
 export interface ImmersiveCanvasProps {
   movies: Movie[];
   progress: RefObject<number>;
-  lowPower?: boolean;
+  /** `static` is not meaningful here — the corridor follows the scroll — so
+   *  weak devices get a capped live render instead. */
+  mode?: Extract<WebglMode, "live" | "off">;
+  dpr?: number;
+  density?: number;
+  fps?: number;
   idle?: boolean;
 }
 
 export default function ImmersiveCanvas({
   movies,
   progress,
-  lowPower = false,
+  mode = "live",
+  dpr = 1.7,
+  density = 1,
+  fps = 60,
   idle = false,
 }: ImmersiveCanvasProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [inView, setInView] = useState(true);
   const idleProgress = useRef(0.12);
+  const lean = density < 0.75;
+  const capped = fps < 60;
 
   useEffect(() => {
     const host = hostRef.current;
@@ -173,41 +185,48 @@ export default function ImmersiveCanvas({
   }, [idle]);
 
   const posters = useMemo(() => {
+    const count = Math.max(4, Math.round(12 * density));
     const spacing = 5.4;
-    return movies.slice(0, lowPower ? 7 : 12).map((movie, index) => {
+    return movies.slice(0, count).map((movie, index) => {
       const angle = index * 0.9;
-      const radius = lowPower ? 2.6 : 3.5 + (index % 3) * 0.7;
+      const radius = lean ? 2.6 : 3.5 + (index % 3) * 0.7;
       return {
         movie,
         position: [
           Math.sin(angle) * radius,
-          Math.cos(angle * 1.3) * (lowPower ? 1.5 : 2.3),
+          Math.cos(angle * 1.3) * (lean ? 1.5 : 2.3),
           -index * spacing - 3,
         ] as [number, number, number],
-        scale: (lowPower ? 2.1 : 2.5) + (index % 4) * 0.25,
+        scale: (lean ? 2.1 : 2.5) + (index % 4) * 0.25,
         tilt: index % 2 === 0 ? 0.12 : -0.14,
         phase: index * 1.7,
       };
     });
-  }, [movies, lowPower]);
+  }, [movies, density, lean]);
+
+  if (mode === "off") return null;
 
   return (
     <div ref={hostRef} className="absolute inset-0">
       <Canvas
-        dpr={[1, lowPower ? 1.3 : 1.7]}
-        frameloop={inView ? "always" : "never"}
+        dpr={[1, dpr]}
+        /* Scroll drives this one, so it stays live — but a weak device gets a
+           24 fps ceiling and a fraction of the dust, and nothing renders while
+           the section is off screen. */
+        frameloop={inView ? (capped ? "demand" : "always") : "never"}
         camera={{ position: [0, 0, 8], fov: 48 }}
         gl={{ antialias: false, alpha: true, powerPreference: "high-performance" }}
         style={{ pointerEvents: "none" }}
       >
-        <Rig progress={idle ? idleProgress : progress} lowPower={lowPower} />
-        <Dust count={lowPower ? 500 : 1600} progress={idle ? idleProgress : progress} />
+        {capped && inView ? <FrameBudget fps={fps} /> : null}
+        <Rig progress={idle ? idleProgress : progress} lean={lean} />
+        <Dust count={Math.round(1600 * density)} progress={idle ? idleProgress : progress} />
         {posters.map((poster) => (
           <Poster
             key={poster.movie.id}
             {...poster}
             progress={idle ? idleProgress : progress}
-            lowPower={lowPower}
+            lean={lean}
           />
         ))}
       </Canvas>

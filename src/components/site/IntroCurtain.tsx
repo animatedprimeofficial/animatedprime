@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { LogoMark } from "@/components/ui/Logo";
 
 interface IntroCurtainProps {
@@ -19,6 +20,7 @@ const SESSION_KEY = "animatedprime:intro-seen";
  * repeat visits within a session.
  */
 export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurtainProps) {
+  const { intro: introScale, glass } = usePerf();
   const rootRef = useRef<HTMLDivElement>(null);
   const counterRef = useRef<HTMLSpanElement>(null);
   const lineRef = useRef<HTMLSpanElement>(null);
@@ -38,9 +40,11 @@ export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurt
       doneRef.current();
       return;
     }
-    const failsafe = window.setTimeout(() => doneRef.current(), 5200);
+    // Scaled with the timeline so a weak device cannot sit behind a curtain
+    // that outlives its own animation.
+    const failsafe = window.setTimeout(() => doneRef.current(), 5200 * introScale + 400);
     return () => window.clearTimeout(failsafe);
-  }, [reducedMotion]);
+  }, [reducedMotion, introScale]);
 
   useGSAP(
     () => {
@@ -59,17 +63,28 @@ export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurt
       const counter = { value: 0 };
       const tail = seen ? 0.35 : 1;
 
+      /*
+       * `timeScale` compresses the whole running order — holds, staggers and
+       * the curtain lift included — so a weak device gets the same beat sheet
+       * in 40% of the time instead of a longer, heavier show. The curtain is
+       * the first thing anyone sees and it holds the hero's entrance, so it is
+       * the last place to spend a struggling device's budget.
+       */
       const tl = gsap.timeline({
         defaults: { ease: EASE.cinema },
+        timeScale: 1 / introScale,
         onComplete: () => doneRef.current(),
       });
 
+      const markFrom = glass
+        ? { opacity: 0, scale: 0.86, filter: "blur(14px)" }
+        : { opacity: 0, scale: 0.86 };
+      const markTo = glass
+        ? { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.9 }
+        : { opacity: 1, scale: 1, duration: 0.9 };
+
       tl.set(root, { autoAlpha: 1 })
-        .fromTo(
-          markRef.current,
-          { opacity: 0, scale: 0.86, filter: "blur(14px)" },
-          { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.9 },
-        )
+        .fromTo(markRef.current, markFrom, markTo)
         .fromTo(
           counter,
           { value: 0 },
@@ -100,11 +115,15 @@ export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurt
         })
         .to(
           root,
-          {
-            clipPath: "inset(0% 0% 100% 0%)",
-            duration: seen ? 0.6 : 1,
-            ease: "power4.inOut",
-          },
+          /*
+           * An animated `clip-path` is a paint-level property: the full-screen
+           * layer is re-rasterised every frame of the lift. A transform moves
+           * the same curtain on the compositor instead, which on a weak GPU is
+           * the difference between a lift and a stutter.
+           */
+          glass
+            ? { clipPath: "inset(0% 0% 100% 0%)", duration: seen ? 0.6 : 1, ease: "power4.inOut" }
+            : { yPercent: -100, duration: seen ? 0.55 : 0.9, ease: "power3.inOut" },
           ">-0.05",
         )
         .set(root, { autoAlpha: 0 });
@@ -113,7 +132,7 @@ export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurt
         tl.kill();
       };
     },
-    { scope: rootRef, dependencies: [reducedMotion, stage] },
+    { scope: rootRef, dependencies: [reducedMotion, stage, introScale, glass] },
   );
 
   if (stage === "done") return null;
@@ -125,8 +144,8 @@ export default function IntroCurtain({ stage, onDone, reducedMotion }: IntroCurt
       className="grain fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden bg-ink-950 [clip-path:inset(0%_0%_0%_0%)]"
     >
       <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute left-1/2 top-1/2 h-[42rem] w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full bg-violet/18 blur-[140px]" />
-        <div className="absolute left-[18%] top-[62%] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full bg-cyan/10 blur-[120px]" />
+        <div className="aura aura-violet-18 absolute left-1/2 top-1/2 h-[42rem] w-[42rem] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+        <div className="aura aura-cyan-10 absolute left-[18%] top-[62%] h-[26rem] w-[26rem] -translate-x-1/2 rounded-full" />
       </div>
 
       <div ref={markRef} className="relative flex flex-col items-center gap-6">

@@ -69,7 +69,7 @@ export default async function MobileAppSection() {
     <section id="app" className="relative py-24 sm:py-28 lg:py-32">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-[-12%] top-1/4 h-[34rem] w-[34rem] rounded-full bg-violet/14 blur-[150px]"
+        className="aura aura-violet-14 pointer-events-none absolute right-[-12%] top-1/4 h-[34rem] w-[34rem] rounded-full"
       />
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">

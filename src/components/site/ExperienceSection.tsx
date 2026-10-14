@@ -117,7 +117,7 @@ export default function ExperienceSection() {
     <section id="experience" ref={rootRef} className="relative py-24 sm:py-28 lg:py-32">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-[-8%] top-1/4 h-[32rem] w-[32rem] rounded-full bg-amber/8 blur-[150px]"
+        className="aura aura-amber-8 pointer-events-none absolute left-[-8%] top-1/4 h-[32rem] w-[32rem] rounded-full"
       />
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">

@@ -94,7 +94,7 @@ export default function MovieExplorer() {
     <section id="explore" className="relative py-24 sm:py-28 lg:py-32">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-[-10%] top-1/3 h-[36rem] w-[36rem] rounded-full bg-cyan/10 blur-[150px]"
+        className="aura aura-cyan-10 pointer-events-none absolute right-[-10%] top-1/3 h-[36rem] w-[36rem] rounded-full"
       />
 
       <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">

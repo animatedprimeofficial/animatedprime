@@ -83,7 +83,7 @@ export default function FeaturedMovies() {
       >
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-40 top-1/4 h-[36rem] w-[36rem] rounded-full bg-violet/12 blur-[150px]"
+          className="aura aura-violet-12 pointer-events-none absolute -left-40 top-1/4 h-[36rem] w-[36rem] rounded-full"
         />
 
         <div className="relative mx-auto w-full max-w-[104rem] px-5 sm:px-6 lg:px-10">

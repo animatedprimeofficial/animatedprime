@@ -19,6 +19,7 @@ import {
   type ScrollSmootherInstance,
 } from "@/lib/gsap";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { usePerf } from "@/components/providers/PerfProvider";
 import Navbar from "@/components/site/Navbar";
 import CustomCursor from "@/components/site/CustomCursor";
 import SectionRail from "@/components/site/SectionRail";
@@ -77,6 +78,7 @@ export function AppProvider({
   const lockersRef = useRef<Set<string>>(new Set());
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const canSmooth = useMediaQuery(SMOOTH_SCROLL_MEDIA);
+  const { smoothScroll } = usePerf();
 
   const [ready, setReady] = useState(false);
   const [smooth, setSmooth] = useState(false);
@@ -90,8 +92,14 @@ export function AppProvider({
     const content = contentRef.current;
     if (!wrapper || !content) return;
 
+    /*
+     * Smooth scrolling is a luxury, and the most expensive one in the app: it
+     * re-rasterises the whole document at a new sub-pixel offset every single
+     * frame. On a device that has told us it is struggling — or that the user
+     * has asked for less motion — native scroll is dramatically smoother.
+     */
     let smoother: ScrollSmootherInstance | null = null;
-    if (canSmooth && !reducedMotion) {
+    if (canSmooth && !reducedMotion && smoothScroll) {
       try {
         smoother = ScrollSmoother.create({
           wrapper,
@@ -119,7 +127,7 @@ export function AppProvider({
       setSmooth(false);
       ScrollTrigger.refresh();
     };
-  }, [canSmooth, reducedMotion]);
+  }, [canSmooth, reducedMotion, smoothScroll]);
 
   // Keep measurements honest once webfonts land, and on viewport rotation.
   useEffect(() => {
@@ -173,9 +181,9 @@ export function AppProvider({
         return;
       }
       const top = window.scrollY + element.getBoundingClientRect().top - 76;
-      window.scrollTo({ top, behavior: reducedMotion ? "auto" : "smooth" });
+      window.scrollTo({ top, behavior: reducedMotion || !smoothScroll ? "auto" : "smooth" });
     },
-    [reducedMotion],
+    [reducedMotion, smoothScroll],
   );
 
   const refresh = useCallback(() => ScrollTrigger.refresh(), []);

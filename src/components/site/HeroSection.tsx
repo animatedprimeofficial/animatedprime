@@ -5,8 +5,9 @@ import { useRef } from "react";
 import { gsap, EASE, useGSAP } from "@/lib/gsap";
 import { useApp } from "@/components/providers/AppProvider";
 import { useCatalog } from "@/components/providers/CatalogProvider";
+import { usePerf } from "@/components/providers/PerfProvider";
 import { usePlayer } from "@/components/providers/PlayerProvider";
-import { useIsDesktop, useReducedMotion } from "@/hooks/useMediaQuery";
+import { useReducedMotion } from "@/hooks/useMediaQuery";
 import AnimatedHeading from "@/components/anim/AnimatedHeading";
 import MagneticButton from "@/components/anim/MagneticButton";
 import Artwork from "@/components/art/Artwork";
@@ -63,8 +64,17 @@ export default function HeroSection() {
   const { introDone, scrollTo, ready } = useApp();
   const { open } = usePlayer();
   const reducedMotion = useReducedMotion();
-  const isDesktop = useIsDesktop();
+  const perf = usePerf();
   const { hero: movie } = useCatalog();
+  /*
+   * Read through a ref rather than a dependency: the entrance must play once,
+   * and re-running it because the watchdog demoted the device mid-scene would
+   * replay the whole reveal. The value is only consulted when the timeline is
+   * built, which happens either side of the intro curtain — long after the
+   * initial tier has settled.
+   */
+  const glassRef = useRef(perf.glass);
+  glassRef.current = perf.glass;
 
   /*
    * Pre-stage. Runs on first paint, before the curtain lifts, so the hero is
@@ -87,6 +97,10 @@ export default function HeroSection() {
       if (reducedMotion || !introDone) return;
       const tl = gsap.timeline({ defaults: { ease: EASE.cinema } });
 
+      if (!glassRef.current) {
+        tl.set("[data-hero-frame]", { clipPath: "none", scale: 1 });
+      }
+
       tl.fromTo("[data-hero-bg]", { scale: 1.07 }, { scale: 1, duration: 1.5 }, 0)
         .fromTo(
           "[data-hero-atmos]",
@@ -97,14 +111,22 @@ export default function HeroSection() {
         .fromTo("[data-hero-pill]", { y: 18, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 }, 0.15)
         .fromTo(
           "[data-hero-frame]",
-          { clipPath: "inset(16% 14% 16% 14% round 2.6rem)", scale: 1.09, opacity: 0 },
-          {
-            clipPath: "inset(0% 0% 0% 0% round 2.6rem)",
-            scale: 1,
-            opacity: 1,
-            duration: 1.6,
-            ease: "power3.inOut",
-          },
+          glassRef.current
+            ? { clipPath: "inset(16% 14% 16% 14% round 2.6rem)", scale: 1.09, opacity: 0 }
+            : /* The pre-stage pose is tier-independent, but a lite device should
+                 not pay for an animated clip-path on the largest layer in the
+                 hero. The frame is still invisible here, so adopting the cheap
+                 pose costs nothing visually. */
+              { opacity: 0, y: 30 },
+          glassRef.current
+            ? {
+                clipPath: "inset(0% 0% 0% 0% round 2.6rem)",
+                scale: 1,
+                opacity: 1,
+                duration: 1.6,
+                ease: "power3.inOut",
+              }
+            : { opacity: 1, y: 0, duration: 1.2, ease: "power3.out" },
           0.1,
         )
         .fromTo("[data-hero-sub]", { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 1 }, 0.55)
@@ -128,10 +150,18 @@ export default function HeroSection() {
     { scope: rootRef, dependencies: [introDone, reducedMotion], revertOnUpdate: false },
   );
 
-  /* Ambient life: chips float, the cue dot travels, frames drift on scroll. */
+  /*
+   * Ambient life: the chips float and the cue dot travels, forever. Two
+   * infinitely repeating tweens are cheap on a workstation and a permanent tax
+   * on a weak device — they hold the compositor out of idle and compete with
+   * scrolling for the same frames — so they live in their own effect and stop
+   * the moment the budget says so. Kept apart from the scroll work below:
+   * reverting a loop returns an element to rest, whereas re-running the scroll
+   * setup would replay the hero.
+   */
   useGSAP(
     () => {
-      if (reducedMotion) return;
+      if (reducedMotion || !perf.ambient) return;
 
       gsap.utils.toArray<HTMLElement>("[data-hero-chip]").forEach((chip, i) => {
         gsap.to(chip, {
@@ -152,6 +182,14 @@ export default function HeroSection() {
           { y: 46, opacity: 1, duration: 2.1, ease: "power2.inOut", repeat: -1, repeatDelay: 0.35 },
         );
       }
+    },
+    { scope: rootRef, dependencies: [reducedMotion, perf.ambient], revertOnUpdate: true },
+  );
+
+  /* Scroll-driven drift — one-shot, so it survives any tier change. */
+  useGSAP(
+    () => {
+      if (reducedMotion) return;
 
       if (!ready) return;
       const scroller = {
@@ -164,7 +202,19 @@ export default function HeroSection() {
 
       gsap.to("[data-hero-frame]", { yPercent: -9, ...{ scrollTrigger: scroller } });
       gsap.to("[data-hero-copy]", { yPercent: 14, opacity: 0.2, scrollTrigger: scroller });
-      gsap.to("[data-hero-atmos]", { yPercent: 22, opacity: 0.15, scrollTrigger: scroller });
+      /*
+       * Explicit endpoints, and deliberately no immediate render. The entrance
+       * timeline owns this element's opacity while it plays, and the pre-stage
+       * parks it at 0 — so a plain `gsap.to` captured that transient 0 as its
+       * start and scrubbed the dust from 0 to 0.15. Which meant that after a
+       * single scroll pass, returning to the top left the hero atmosphere at
+       * an opacity of zero for the rest of the session.
+       */
+      gsap.fromTo(
+        "[data-hero-atmos]",
+        { yPercent: 0, opacity: 0.85 },
+        { yPercent: 22, opacity: 0.15, ease: "none", immediateRender: false, scrollTrigger: scroller },
+      );
       gsap.to("[data-hero-art-inner]", {
         yPercent: 6,
         scale: 1.06,
@@ -182,10 +232,17 @@ export default function HeroSection() {
       className="relative isolate flex min-h-[100svh] flex-col justify-center overflow-hidden pt-24 pb-14 sm:pt-32 sm:pb-20 lg:pt-20 lg:pb-16"
     >
       {/* atmosphere layers */}
+      {/*
+        * The aura boxes are ~1.75× the discs they replace and centred on the
+        * same points: a blur bleeds well past its own box, so matching the
+        * old coverage means giving the gradient room to fade into the frame
+        * rather than stopping short of it. Anchored as a percentage of the
+        * section so the three washes keep their relationship to the layout.
+        */}
       <div data-hero-bg aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20">
-        <div className="absolute -top-52 -left-40 h-[52rem] w-[52rem] rounded-full bg-violet/22 blur-[160px]" />
-        <div className="absolute -top-10 right-[-12rem] h-[42rem] w-[42rem] rounded-full bg-cyan/14 blur-[150px]" />
-        <div className="absolute bottom-[-10rem] left-1/4 h-[34rem] w-[34rem] rounded-full bg-rose/12 blur-[140px]" />
+        <div className="aura aura-violet-22 absolute left-[18%] top-[23%] h-[91rem] w-[91rem] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+        <div className="aura aura-cyan-14 absolute left-[90%] top-[33%] h-[74rem] w-[74rem] -translate-x-1/2 -translate-y-1/2 rounded-full" />
+        <div className="aura aura-rose-12 absolute left-[44%] top-[88%] h-[60rem] w-[60rem] -translate-x-1/2 -translate-y-1/2 rounded-full" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(124,92,255,0.16),transparent_58%)]" />
       </div>
 
@@ -211,7 +268,12 @@ export default function HeroSection() {
 
       {reducedMotion ? null : (
         <div data-hero-atmos aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 hidden opacity-0 lg:block">
-          <HeroAtmosphere lowPower={!isDesktop} />
+          <HeroAtmosphere
+            mode={perf.webgl}
+            dpr={perf.dpr}
+            density={perf.density}
+            fps={perf.fps}
+          />
         </div>
       )}
 
@@ -324,7 +386,10 @@ export default function HeroSection() {
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 -z-10 animate-[spin_46s_linear_infinite] rounded-[3.4rem] border border-dashed border-white/8"
+              className={cn(
+                "absolute inset-0 -z-10 rounded-[3.4rem] border border-dashed border-white/8",
+                perf.ambient && "animate-[spin_46s_linear_infinite]",
+              )}
             />
 
             <div

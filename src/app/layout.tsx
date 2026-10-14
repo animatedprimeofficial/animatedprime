@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppProvider } from "@/components/providers/AppProvider";
 import { CatalogProvider } from "@/components/providers/CatalogProvider";
 import { ExplorerProvider } from "@/components/providers/ExplorerProvider";
+import { PerfProvider } from "@/components/providers/PerfProvider";
 import { PlayerProvider } from "@/components/providers/PlayerProvider";
 import { WatchlistProvider } from "@/components/providers/WatchlistProvider";
 import { getCatalog } from "@/lib/catalog";
@@ -104,9 +105,14 @@ export default async function RootLayout({
           <ExplorerProvider>
             <WatchlistProvider>
               <PlayerProvider>
-                <AppProvider release={release}>
-                  <main id="main">{children}</main>
-                </AppProvider>
+                {/* Outermost of the motion providers: the scroll environment,
+                    the opening curtain and every canvas read their budget
+                    from here. */}
+                <PerfProvider>
+                  <AppProvider release={release}>
+                    <main id="main">{children}</main>
+                  </AppProvider>
+                </PerfProvider>
               </PlayerProvider>
             </WatchlistProvider>
           </ExplorerProvider>

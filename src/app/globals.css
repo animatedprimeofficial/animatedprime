@@ -403,6 +403,141 @@
 }
 
 /* ------------------------------------------------------------------ *
+ * Auras — the coloured washes behind every section
+ *
+ * These used to be discs of solid colour with `filter: blur(110–160px)`.
+ * A Gaussian blur that wide is not a paint optimisation, it is a paint
+ * *problem*: a 52rem layer is 830² CSS px of offscreen rasterisation, it is
+ * re-blurred on every frame anything inside its layer moves, and on an
+ * integrated GPU three of them in the hero is a visible stall.
+ *
+ * A radial gradient is the same soft falloff with none of that: it is part of
+ * the element's own background, so it is rasterised once, costs no filter
+ * pass, allocates no layer, and — the part that matters for animation — an
+ * aura can be transformed by GSAP on the compositor at zero repaint cost.
+ *
+ * Peaks are set slightly below the originals because a blur spreads a disc's
+ * energy far outside its own box, and a gradient does not.
+ * ------------------------------------------------------------------ */
+@layer components {
+  .aura {
+    background-image: radial-gradient(
+      50% 50% at 50% 50%,
+      var(--ap-aura) 0%,
+      var(--ap-aura) 6%,
+      transparent 100%
+    );
+  }
+
+  /* Two-tone washes, used where the original was a linear gradient (the CTA
+     auroras and the intro curtain), so the hue still travels. */
+  .aura-violet-rose {
+    background-image: radial-gradient(
+      58% 58% at 42% 50%,
+      color-mix(in oklab, var(--color-violet) 34%, transparent) 0%,
+      color-mix(in oklab, var(--color-rose) 20%, transparent) 46%,
+      transparent 100%
+    );
+  }
+  .aura-cyan-mint {
+    background-image: radial-gradient(
+      58% 58% at 54% 50%,
+      color-mix(in oklab, var(--color-cyan) 26%, transparent) 0%,
+      color-mix(in oklab, var(--color-mint) 12%, transparent) 48%,
+      transparent 100%
+    );
+  }
+  .aura-violet-cyan {
+    background-image: radial-gradient(
+      60% 60% at 40% 40%,
+      color-mix(in oklab, var(--color-violet) 26%, transparent) 0%,
+      color-mix(in oklab, var(--color-cyan) 16%, transparent) 50%,
+      transparent 100%
+    );
+  }
+
+  .aura-violet-8 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 8%, transparent);
+  }
+  .aura-violet-12 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 12%, transparent);
+  }
+  .aura-violet-14 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 13%, transparent);
+  }
+  .aura-violet-18 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 15%, transparent);
+  }
+  .aura-violet-22 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 18%, transparent);
+  }
+  .aura-violet-25 {
+    --ap-aura: color-mix(in oklab, var(--color-violet) 20%, transparent);
+  }
+  .aura-cyan-10 {
+    --ap-aura: color-mix(in oklab, var(--color-cyan) 10%, transparent);
+  }
+  .aura-cyan-14 {
+    --ap-aura: color-mix(in oklab, var(--color-cyan) 13%, transparent);
+  }
+  .aura-cyan-15 {
+    --ap-aura: color-mix(in oklab, var(--color-cyan) 14%, transparent);
+  }
+  .aura-rose-12 {
+    --ap-aura: color-mix(in oklab, var(--color-rose) 12%, transparent);
+  }
+  .aura-amber-8 {
+    --ap-aura: color-mix(in oklab, var(--color-amber) 9%, transparent);
+  }
+  .aura-amber-12 {
+    --ap-aura: color-mix(in oklab, var(--color-amber) 11%, transparent);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Lite tier — the device told us it cannot keep up
+ *
+ * Everything here is a subtractive override for the paint effects that cost the
+ * most per frame on weak hardware. The tier is written to `<html data-perf>` by
+ * PerfProvider, so a runtime demotion can shed this weight without every
+ * component taking a React branch.
+ * ------------------------------------------------------------------ */
+html[data-perf="lite"] .glass,
+html[data-perf="lite"] .glass-strong,
+html[data-perf="lite"] [class*="backdrop-blur"] {
+  /* A backdrop filter re-samples everything painted behind the element on
+     every frame it scrolls — the single worst offender for fixed chrome. The
+     panels keep a near-opaque tint, so legibility does not depend on it. */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+html[data-perf="lite"] .glass {
+  background: rgb(12 15 30 / 0.88);
+}
+
+html[data-perf="lite"] .glass-strong {
+  background: rgb(8 10 20 / 0.94);
+}
+
+html[data-perf="lite"] .grain::after {
+  /* `mix-blend-mode: overlay` over the whole viewport forces the backdrop
+     through a separate compositing pass. */
+  content: none;
+}
+
+html[data-perf="lite"] .shimmer::after {
+  /* Poster tiles sweep while they load; with dozens in flight that is dozens
+     of animated layers. The static gradient underneath is the same tile. */
+  animation: none;
+  opacity: 0;
+}
+
+html[data-perf="lite"] .will-change-transform {
+  will-change: auto;
+}
+
+/* ------------------------------------------------------------------ *
  * Motion preferences
  * ------------------------------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {

@@ -313,8 +313,8 @@ export default function Navbar({ release }: { release: AppRelease }) {
           className="fixed inset-0 -z-10 flex flex-col justify-between bg-ink-950/92 pb-10 pt-28 backdrop-blur-2xl lg:hidden"
         >
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -left-24 top-10 h-72 w-72 rounded-full bg-violet/25 blur-[110px]" />
-            <div className="absolute right-0 bottom-0 h-80 w-80 rounded-full bg-cyan/15 blur-[120px]" />
+            <div className="aura aura-violet-25 absolute -left-24 top-10 h-72 w-72 rounded-full" />
+            <div className="aura aura-cyan-15 absolute right-0 bottom-0 h-80 w-80 rounded-full" />
           </div>
 
           <nav ref={menuListRef} aria-label="Mobile" className="relative flex flex-col gap-2 px-7">
